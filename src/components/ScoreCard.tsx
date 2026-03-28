@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Skull, TrendingDown, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Skull, TrendingUp, AlertTriangle } from 'lucide-react';
 
 interface ScoreProps {
   score: number;
