@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { User, Heart, Zap, Save, RefreshCw, MessageCircle } from 'lucide-react';
 
 interface SettingsProps {
@@ -14,6 +15,22 @@ interface SettingsProps {
 }
 
 export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }: SettingsProps) {
+  const [localConfig, setLocalConfig] = useState(config);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(localConfig);
+      alert('Configurações salvas no QG com sucesso!');
+    } catch (e) {
+      console.error(e);
+      alert('Falha ao sincronizar com o QG Central.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
       <div className="mb-6">
@@ -33,8 +50,8 @@ export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }
             <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">Seu Nome (Vítima)</label>
             <input 
               type="text" 
-              value={config.userName}
-              onChange={(e) => onSave({ ...config, userName: e.target.value })}
+              value={localConfig.userName}
+              onChange={(e) => setLocalConfig({ ...localConfig, userName: e.target.value })}
               className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-lilac/50 transition-colors"
               placeholder="Ex: Roberto"
             />
@@ -44,8 +61,8 @@ export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }
             <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">Seu WhatsApp (Somente Números)</label>
             <input 
               type="text" 
-              value={config.userPhone}
-              onChange={(e) => onSave({ ...config, userPhone: e.target.value })}
+              value={localConfig.userPhone}
+              onChange={(e) => setLocalConfig({ ...localConfig, userPhone: e.target.value })}
               className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-lilac/50 transition-colors"
               placeholder="Ex: 5511988888888"
             />
@@ -64,8 +81,8 @@ export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }
               <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">Nome da Esposa</label>
               <input 
                 type="text" 
-                value={config.wifeName}
-                onChange={(e) => onSave({ ...config, wifeName: e.target.value })}
+                value={localConfig.wifeName}
+                onChange={(e) => setLocalConfig({ ...localConfig, wifeName: e.target.value })}
                 className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-pink/50 transition-colors"
                 placeholder="Ex: Patrícia"
               />
@@ -75,8 +92,8 @@ export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }
               <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">WhatsApp Dela (55 + DDD + Numero)</label>
               <input 
                 type="text" 
-                value={config.wifePhone}
-                onChange={(e) => onSave({ ...config, wifePhone: e.target.value })}
+                value={localConfig.wifePhone}
+                onChange={(e) => setLocalConfig({ ...localConfig, wifePhone: e.target.value })}
                 className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-pink/50 transition-colors"
                 placeholder="Ex: 5511999999999"
               />
@@ -102,8 +119,8 @@ export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }
               type="range" 
               min="0" 
               max="100" 
-              value={config.sarcasmLevel}
-              onChange={(e) => onSave({ ...config, sarcasmLevel: parseInt(e.target.value) })}
+              value={localConfig.sarcasmLevel}
+              onChange={(e) => setLocalConfig({ ...localConfig, sarcasmLevel: parseInt(e.target.value) })}
               className="w-full h-2 bg-black/30 rounded-lg appearance-none cursor-pointer accent-brand-warning"
             />
           </div>
@@ -140,11 +157,16 @@ export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }
 
         <div className="pt-4 flex flex-col sm:flex-row gap-4">
           <button 
-            className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-brand-lilac to-brand-pink text-white font-bold flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-shadow active:scale-[0.98]"
-            onClick={() => alert('Configs salvas (automaticamente por trás dos panos!)')}
+            disabled={isSaving}
+            className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-brand-lilac to-brand-pink text-white font-bold flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-shadow active:scale-[0.98] disabled:opacity-50"
+            onClick={handleSave}
           >
-            <Save className="w-5 h-5" />
-            <span>Salvar Tudo</span>
+            {isSaving ? (
+              <RefreshCw className="w-5 h-5 animate-spin" />
+            ) : (
+              <Save className="w-5 h-5" />
+            )}
+            <span>{isSaving ? 'Salvando...' : 'Salvar Tudo'}</span>
           </button>
           
           <button 
@@ -156,7 +178,7 @@ export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }
           </button>
         </div>
 
-        <div className="text-center">
+        <div className="text-center mt-6">
             <p className="text-[10px] text-white/20 uppercase font-black tracking-[0.2em]">Versão Alpha 1.0.4 — Salvo Pela Esposa Corp</p>
         </div>
       </div>
