@@ -77,6 +77,14 @@ export function useSupabaseData() {
           userPhone: profile.user_phone || DEFAULT_CONFIG.userPhone,
           sarcasmLevel: profile.sarcasm_level ?? DEFAULT_CONFIG.sarcasmLevel,
         });
+      } else {
+        // Fallback: carrega do localStorage se Supabase não retornou dados
+        const saved = localStorage.getItem('tl_config');
+        if (saved) {
+          try {
+            setConfig(JSON.parse(saved));
+          } catch { /* ignora parse error */ }
+        }
       }
 
       // 2. Processar Missões
@@ -165,14 +173,20 @@ export function useSupabaseData() {
 
   const updateConfig = async (newConfig: AppConfig) => {
     setConfig(newConfig);
+    // Sempre salva no localStorage como garantia local imediata
+    localStorage.setItem('tl_config', JSON.stringify(newConfig));
     if (!user) return;
-    await supabase.from('profiles').update({
+    const { error } = await supabase.from('profiles').upsert({
+      id: user.id,
       user_name: newConfig.userName,
       wife_name: newConfig.wifeName,
       wife_phone: newConfig.wifePhone,
       user_phone: newConfig.userPhone,
       sarcasm_level: newConfig.sarcasmLevel
-    }).eq('id', user.id);
+    }, { onConflict: 'id' });
+    if (error) {
+      console.warn('Supabase save failed, data safe in localStorage:', error.message);
+    }
   };
 
   const toggleMissionDb = async (id: number | string) => {
