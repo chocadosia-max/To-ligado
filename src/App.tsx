@@ -9,7 +9,9 @@ import { Agenda } from './components/Agenda';
 import { Ranking } from './components/Ranking';
 import { SettingsComponent } from './components/Settings';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { Settings, ShieldAlert, Home, Calendar, UserRound } from 'lucide-react';
+import { Settings, ShieldAlert, Home, Calendar, UserRound, LogOut } from 'lucide-react';
+import { useAuth } from './contexts/AuthContext';
+import { Login } from './components/Login';
 
 type Tab = 'painel' | 'agenda' | 'ranking' | 'ajustes';
 
@@ -33,6 +35,7 @@ const DEFAULT_CONFIG: AppConfig = {
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('painel');
+  const { session, loading, signOut } = useAuth();
   
   // Persistent State (@data-squad)
   const [missions, setMissions] = useLocalStorage<Mission[]>('tl_missions', INITIAL_MISSIONS);
@@ -61,6 +64,19 @@ function App() {
       setActiveTab('painel');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center">
+        <ShieldAlert className="w-12 h-12 text-brand-lilac animate-pulse mb-4" />
+        <p className="text-white/50 text-sm tracking-widest uppercase font-bold">Conectando ao QG...</p>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login />;
+  }
 
   return (
     <div className="min-h-screen bg-brand-dark font-sans text-white selection:bg-brand-pink/30 flex flex-col md:flex-row">
@@ -107,6 +123,14 @@ function App() {
           <Settings className="w-6 h-6 lg:w-5 lg:h-5" />
           <span className="text-[10px] lg:text-sm font-bold">Ajustes</span>
         </button>
+
+        <button 
+          onClick={signOut}
+          className={`hidden md:flex flex-col items-center lg:flex-row lg:justify-start lg:w-full lg:px-4 space-y-1 lg:space-y-0 lg:space-x-3 transition-colors p-2 rounded-xl text-brand-danger/60 hover:text-brand-danger hover:bg-brand-danger/10 mt-auto`}
+        >
+          <LogOut className="w-6 h-6 lg:w-5 lg:h-5" />
+          <span className="text-[10px] lg:text-sm font-bold">Sair do QG</span>
+        </button>
       </nav>
 
       <div className="flex-1 max-w-7xl mx-auto w-full pb-24 md:pb-6 overflow-y-auto overflow-x-hidden relative h-screen">
@@ -122,12 +146,20 @@ function App() {
             </h1>
             <p className="text-xs text-brand-pink/80 tracking-widest font-bold">SALVO PELA ESPOSA</p>
           </div>
-          <button 
-            onClick={() => setActiveTab('ajustes')}
-            className={`p-2 rounded-full transition-colors pointer-events-auto ${activeTab === 'ajustes' ? 'bg-brand-lilac/20' : 'bg-white/5 hover:bg-white/10'}`}
-          >
-            <Settings className="w-5 h-5 text-white/70" />
-          </button>
+          <div className="flex space-x-2">
+            <button 
+              onClick={() => setActiveTab('ajustes')}
+              className={`p-2 rounded-full transition-colors pointer-events-auto ${activeTab === 'ajustes' ? 'bg-brand-lilac/20' : 'bg-white/5 hover:bg-white/10'}`}
+            >
+              <Settings className="w-5 h-5 text-white/70" />
+            </button>
+            <button 
+              onClick={signOut}
+              className={`p-2 rounded-full bg-white/5 hover:bg-brand-danger/20 hover:text-brand-danger transition-colors pointer-events-auto`}
+            >
+              <LogOut className="w-5 h-5 text-white/70 hover:text-brand-danger" />
+            </button>
+          </div>
         </header>
 
         {/* Desktop Title & Context Bar */}
