@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 export interface AppConfig {
   userName: string;
   wifeName: string;
+  wifePhone: string;
   sarcasmLevel: number;
 }
 
@@ -29,6 +30,7 @@ export interface AgendaItem {
 const DEFAULT_CONFIG: AppConfig = {
   userName: 'Soldado',
   wifeName: 'Comandante',
+  wifePhone: '',
   sarcasmLevel: 50,
 };
 
@@ -91,7 +93,8 @@ export function useSupabaseData() {
             .insert({ 
               id: user.id, 
               user_name: signupName, 
-              wife_name: DEFAULT_CONFIG.wifeName 
+              wife_name: DEFAULT_CONFIG.wifeName,
+              wife_phone: DEFAULT_CONFIG.wifePhone
             })
             .select()
             .single();
@@ -102,6 +105,7 @@ export function useSupabaseData() {
           setConfig({
             userName: profile.user_name || user.user_metadata?.full_name || DEFAULT_CONFIG.userName,
             wifeName: profile.wife_name || DEFAULT_CONFIG.wifeName,
+            wifePhone: profile.wife_phone || DEFAULT_CONFIG.wifePhone,
             sarcasmLevel: profile.sarcasm_level ?? DEFAULT_CONFIG.sarcasmLevel,
           });
         }
@@ -197,6 +201,7 @@ export function useSupabaseData() {
     await supabase.from('profiles').update({
       user_name: newConfig.userName,
       wife_name: newConfig.wifeName,
+      wife_phone: newConfig.wifePhone,
       sarcasm_level: newConfig.sarcasmLevel
     }).eq('id', user.id);
   };

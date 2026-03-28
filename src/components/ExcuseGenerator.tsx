@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wand2, RefreshCcw, Lock, Copy, CheckCircle2 } from 'lucide-react';
+import { Wand2, RefreshCcw, Lock, Copy, CheckCircle2, MessageCircle } from 'lucide-react';
 import type { AppConfig } from '../hooks/useSupabaseData';
 
 interface ExcuseGeneratorProps {
@@ -43,6 +43,17 @@ export function ExcuseGenerator({ config, onLogEvent }: ExcuseGeneratorProps) {
     }
   };
 
+
+  const sendToWhatsApp = () => {
+    if (!excuse) return;
+    const phone = config.wifePhone.replace(/\D/g, '');
+    if (!phone) {
+      alert('Configure o WhatsApp da Comandante nos Ajustes primeiro!');
+      return;
+    }
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(excuse)}`;
+    window.open(url, '_blank');
+  };
 
   const copyToClipboard = () => {
     if (excuse) {
@@ -104,16 +115,26 @@ export function ExcuseGenerator({ config, onLogEvent }: ExcuseGeneratorProps) {
             className="mt-4 p-4 rounded-xl bg-white/5 border border-white/10"
           >
             <p className="text-sm italic text-white/90">"{excuse}"</p>
-            <div className="mt-3 flex space-x-2">
+            <div className="mt-3 flex flex-col space-y-2">
+              <div className="flex space-x-2">
+                <button 
+                  onClick={copyToClipboard}
+                  className="flex-[2] py-2 flex items-center justify-center rounded-md bg-white/10 text-xs font-semibold text-white/80 hover:bg-white/20 transition-colors"
+                >
+                  {copied ? <CheckCircle2 className="w-4 h-4 text-brand-success mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                  {copied ? 'Copiado!' : 'Copiar'}
+                </button>
+                <button onClick={generateExcuse} className="flex-1 py-2 flex items-center justify-center rounded-md bg-white/10 text-white/80 hover:bg-white/20 transition-colors">
+                  <RefreshCcw className="w-4 h-4 mr-2" /> Outra
+                </button>
+              </div>
+              
               <button 
-                onClick={copyToClipboard}
-                className="flex-[2] py-2 flex items-center justify-center rounded-md bg-white/10 text-xs font-semibold text-white/80 hover:bg-white/20 transition-colors"
+                onClick={sendToWhatsApp}
+                className="w-full py-2.5 flex items-center justify-center rounded-md bg-brand-success/20 text-xs font-bold text-brand-success hover:bg-brand-success/30 border border-brand-success/30 transition-all active:scale-[0.98]"
               >
-                {copied ? <CheckCircle2 className="w-4 h-4 text-brand-success mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                {copied ? 'Copiado!' : 'Copiar Desculpa'}
-              </button>
-              <button onClick={generateExcuse} className="flex-1 py-2 flex items-center justify-center rounded-md bg-white/10 text-white/80 hover:bg-white/20 transition-colors">
-                <RefreshCcw className="w-4 h-4 mr-2" /> Tentar Outra
+                <MessageCircle className="w-4 h-4 mr-2" />
+                Enviar para a Comandante
               </button>
             </div>
           </motion.div>

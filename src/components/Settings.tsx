@@ -4,6 +4,7 @@ interface SettingsProps {
   config: {
     userName: string;
     wifeName: string;
+    wifePhone: string;
     sarcasmLevel: number;
   };
   onSave: (newConfig: any) => void;
@@ -45,17 +46,31 @@ export function SettingsComponent({ config, onSave, onReset }: SettingsProps) {
             <h3 className="font-bold text-white">Dados Dela (A Braba)</h3>
           </div>
           
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">Nome da Esposa</label>
-            <input 
-              type="text" 
-              value={config.wifeName}
-              onChange={(e) => onSave({ ...config, wifeName: e.target.value })}
-              className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-pink/50 transition-colors"
-              placeholder="Ex: Patrícia"
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">Nome da Esposa</label>
+              <input 
+                type="text" 
+                value={config.wifeName}
+                onChange={(e) => onSave({ ...config, wifeName: e.target.value })}
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-pink/50 transition-colors"
+                placeholder="Ex: Patrícia"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">WhatsApp Dela (55 + DDD + Numero)</label>
+              <input 
+                type="text" 
+                value={config.wifePhone}
+                onChange={(e) => onSave({ ...config, wifePhone: e.target.value })}
+                className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-pink/50 transition-colors"
+                placeholder="Ex: 5511999999999"
+              />
+            </div>
           </div>
         </div>
+
 
         {/* Sarcasm Level */}
         <div className="bg-brand-card/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm space-y-4">
