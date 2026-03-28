@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-lilac: #B49FDC;
+  --color-brand-pink: #FF61A6;
+  --color-brand-dark: #0a0a0f;
+  --color-brand-card: #181822;
+  --color-brand-danger: #FF3B30;
+  --color-brand-warning: #FF9500;
+  --color-brand-success: #34C759;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--color-brand-dark)] text-white font-sans antialiased overflow-x-hidden;
+  }
+}
