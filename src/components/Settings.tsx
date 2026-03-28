@@ -1,4 +1,4 @@
-import { User, Heart, Zap, Save, RefreshCw } from 'lucide-react';
+import { User, Heart, Zap, Save, RefreshCw, MessageCircle } from 'lucide-react';
 
 interface SettingsProps {
   config: {
@@ -10,9 +10,10 @@ interface SettingsProps {
   };
   onSave: (newConfig: any) => void;
   onReset: () => void;
+  onSimulateWebhook?: (msg: string) => void;
 }
 
-export function SettingsComponent({ config, onSave, onReset }: SettingsProps) {
+export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }: SettingsProps) {
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
       <div className="mb-6">
@@ -105,6 +106,35 @@ export function SettingsComponent({ config, onSave, onReset }: SettingsProps) {
               onChange={(e) => onSave({ ...config, sarcasmLevel: parseInt(e.target.value) })}
               className="w-full h-2 bg-black/30 rounded-lg appearance-none cursor-pointer accent-brand-warning"
             />
+          </div>
+        </div>
+
+        {/* Simulação Bot WhatsApp */}
+        <div className="bg-brand-success/10 p-6 rounded-3xl border border-brand-success/20 backdrop-blur-sm space-y-4">
+          <div className="flex items-center space-x-3 mb-2">
+            <MessageCircle className="w-5 h-5 text-brand-success" />
+            <h3 className="font-bold text-white">Simulador de Comando (Dela)</h3>
+          </div>
+          
+          <div className="space-y-4">
+            <p className="text-xs text-brand-success/60 italic font-medium">Use para testar se a IA entende as ordens enviadas pelo WhatsApp dela.</p>
+            <div className="flex space-x-2">
+              <input 
+                id="simMsg"
+                type="text" 
+                className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-success/50 transition-colors text-sm"
+                placeholder="Ex: 'Amor, compra fralda e tira o lixo'"
+              />
+              <button 
+                onClick={() => {
+                   const val = (document.getElementById('simMsg') as HTMLInputElement).value;
+                   if (val && onSimulateWebhook) onSimulateWebhook(val);
+                }}
+                className="px-6 py-3 rounded-xl bg-brand-success/20 text-brand-success font-bold hover:bg-brand-success/30 transition-all active:scale-[0.98] text-sm"
+              >
+                Enviar
+              </button>
+            </div>
           </div>
         </div>
 

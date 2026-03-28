@@ -35,7 +35,8 @@ function App() {
     resetAllMissions,
     lastMedTime, 
     updateLastMedTime, 
-    loadingDb 
+    loadingDb,
+    refreshData
   } = useSupabaseData();
 
   // Derived Score (@advisory-board)
@@ -232,6 +233,20 @@ function App() {
                   config={config} 
                   onSave={updateConfig} 
                   onReset={resetAll} 
+                  onSimulateWebhook={async (msg) => {
+                    const res = await fetch('/api/whatsapp-webhook', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ sender: config.wifePhone || '5511999999999', message: msg })
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      alert(`IA Processou: ${data.intent.action}. Recarregando para ver mudanças.`);
+                      window.location.reload();
+                    } else {
+                      alert('Erro na simulação. Verifique os logs do Vercel.');
+                    }
+                  }}
                 />
               )}
             </motion.div>
