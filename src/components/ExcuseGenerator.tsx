@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Wand2, RefreshCcw, Lock, Copy, CheckCircle2, MessageCircle } from 'lucide-react';
 import type { AppConfig } from '../hooks/useSupabaseData';
 
+import { ARSENAL_ELITE } from '../data/excuses';
+
 interface ExcuseGeneratorProps {
   config: AppConfig;
   onLogEvent?: (tag: string, content: string, status: any) => void;
@@ -13,43 +15,6 @@ export function ExcuseGenerator({ config, onLogEvent }: ExcuseGeneratorProps) {
   const [excuse, setExcuse] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const FAILSAFE_EXCUSES = [
-    // --- ORIGINAIS DE ELITE ---
-    "O pneu furou bem em frente ao quartel general. Tive que trocar no braço, enquanto um gato me julgava.",
-    "O vizinho me confundiu com um agente secreto e me deteve por 10 minutos para tirar dúvidas sobre geopolítica e churrasco.",
-    "Meu celular atualizou o sistema bem na hora de mandar a mensagem. O processo de segurança do banco travou meu cérebro junto.",
-    "O cachorro engoliu a chave do carro. Tive que esperar a natureza (ou o chaveiro) seguir seu curso.",
-    "Fui parado pelo síndico para discutir o futuro do condomínio. Um verdadeiro sequestro emocional sem pedido de resgate.",
-    "Entrei em um loop temporal no corredor do supermercado tentando decidir entre papel higiênico folha dupla ou tripla.",
-    "Fui abduzido por extraterrestres, mas eles me devolveram porque eu não parava de falar que precisava chegar em casa logo.",
-    "Um enxame de abelhas resolveu fazer uma convenção no capô do meu carro. Tive que esperar a ata ser assinada.",
-    "O GPS entrou em modo depressivo e me levou para dar uma volta no quarteirão 'para a gente pensar na vida'.",
-    "Estava meditando sobre como ser o marido perfeito e acabei transcendendo o tempo e o espaço por alguns minutos.",
-    "Fui parado por uma velhinha que precisava de ajuda para atravessar a rua... e depois para achar o gato... e depois para configurar o Zap.",
-    "Um unicórnio atravessou a frente do carro. Tive que parar para conferir se eu não estava delirando de fome.",
-    "O botão da camisa estourou e tive que fazer uma cirurgia de emergência com um clipe de papel para não chegar indecente.",
-    "A gravidade estava 2% mais forte hoje no caminho de volta, o que atrasou consideravelmente meu deslocamento.",
-    "Fui atingido por um raio de procrastinação vindo de um satélite chinês desgovernado. Só passou agora.",
-    
-    // --- NOVOS ÁLIBIS DE ELITE (ARREBATADORES) ---
-    "Um monge budista me parou para dizer que o meu destino estava ligado ao semáforo que não abria.",
-    "A bateria do carro entrou em greve por falta de incentivos e tive que fazer um acordo coletivo.",
-    "Fui parado por um grupo de testemunhas do churrasco sagrado. Quase me converteram ao pão de alho.",
-    "O sensor de ré do carro cismou que o fantasma do meu bisavô estava estacionado ali atrás.",
-    "Fui confundido com o dublê de ação do Tom Cruise. Tive que fugir de um helicóptero imaginário.",
-    "Um pombo correio com uma mensagem urgente do futuro pousou no meu ombro. Tive que ler com calma.",
-    "O ar condicionado do carro criou um microclima de inverno siberiano e eu não conseguia achar a saída.",
-    "Fui pego por um engarrafamento de carrinhos de sorvete. Foi uma tragédia doce e lenta.",
-    "Passei por uma zona de silêncio absoluto e acabei parando para ouvir meus próprios pensamentos. Assustador.",
-    "Um vendedor de enciclopédias vintage me convenceu de que o Google é apenas uma fase passageira.",
-    "O botão do Waze ficou com ciúmes do Google Maps e os dois começaram a discutir no viva-voz.",
-    "Estava ensaiando meu discurso para o Oscar e fui aplaudido pelas árvores do caminho. Perdi o timing da volta.",
-    "Um buraco negro portátil se abriu na minha frente. Tive que dar a volta para não ser sugado pela singularidade.",
-    "O chaveiro do carro ficou sem pilha e eu tive que cantar 'I Will Always Love You' para ele abrir por reconhecimento emocional.",
-    "Um ninja me desafiou para um duelo de olhares no sinal. Ganhei, mas perdi 5 minutos de glória.",
-    "Fui parado por uma manifestação de formigas exigindo melhores condições de transporte de migalhas."
-  ];
-
   const generateExcuse = () => {
     setIsGenerating(true);
     setExcuse(null);
@@ -57,8 +22,8 @@ export function ExcuseGenerator({ config, onLogEvent }: ExcuseGeneratorProps) {
     
     // Simular processamento (UX de thinking)
     setTimeout(() => {
-      const randomIndex = Math.floor(Math.random() * FAILSAFE_EXCUSES.length);
-      const selected = FAILSAFE_EXCUSES[randomIndex];
+      const randomIndex = Math.floor(Math.random() * ARSENAL_ELITE.length);
+      const selected = ARSENAL_ELITE[randomIndex];
       setExcuse(selected);
       onLogEvent?.('Álibi', 'Arsenal local acionado.', 'done');
       setIsGenerating(false);
