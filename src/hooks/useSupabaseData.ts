@@ -47,10 +47,16 @@ export function useSupabaseData() {
           .single();
           
         if (!profile) {
-          // Criar perfil inicial
+          // Criar perfil inicial usando o nome do metadado do signup se existir
+          const signupName = user.user_metadata?.full_name || DEFAULT_CONFIG.userName;
+          
           const { data: newProfile } = await supabase
             .from('profiles')
-            .insert({ id: user.id, user_name: DEFAULT_CONFIG.userName, wife_name: DEFAULT_CONFIG.wifeName })
+            .insert({ 
+              id: user.id, 
+              user_name: signupName, 
+              wife_name: DEFAULT_CONFIG.wifeName 
+            })
             .select()
             .single();
           profile = newProfile;
@@ -58,7 +64,7 @@ export function useSupabaseData() {
         
         if (profile) {
           setConfig({
-            userName: profile.user_name || DEFAULT_CONFIG.userName,
+            userName: profile.user_name || user.user_metadata?.full_name || DEFAULT_CONFIG.userName,
             wifeName: profile.wife_name || DEFAULT_CONFIG.wifeName,
             sarcasmLevel: profile.sarcasm_level ?? DEFAULT_CONFIG.sarcasmLevel,
           });

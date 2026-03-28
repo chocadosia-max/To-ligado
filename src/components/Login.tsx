@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, ArrowRight, ShieldAlert, UserPlus, LogIn } from 'lucide-react';
+import { Mail, ArrowRight, ShieldAlert, UserPlus, LogIn, Lock } from 'lucide-react';
 
 type Mode = 'login' | 'signup';
 
 export function Login() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [mode, setMode] = useState<Mode>('login');
-  const { signInWithEmail } = useAuth();
+  const { signIn, signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,17 +20,22 @@ export function Login() {
     setMessage('');
     
     try {
-      // Com Magic Link/OTP do Supabase, login e signup são a mesma ação.
-      // Se o email não existe, o Supabase cria automaticamente uma conta nova.
-      const { error } = await signInWithEmail(email);
-      if (error) {
-        setMessage('⚠️ Erro: ' + error.message);
+      if (mode === 'signup') {
+        const { error } = await signUp(email, password, name);
+        if (error) {
+          setMessage('⚠️ Erro ao criar conta: ' + error.message);
+        } else {
+          setMessage('🎉 Conta criada com sucesso! Entrando no QG...');
+        }
       } else {
-        setMessage(
-          mode === 'signup'
-            ? '🎉 Conta criada! Um link mágico foi enviado para ' + email + '. Clique nele para entrar (verifique também a caixa de Spam).'
-            : '🎯 Link mágico enviado para ' + email + '. Clique nele para acessar o QG (verifique o Spam).'
-        );
+        const { error } = await signIn(email, password);
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            setMessage('🚫 Credenciais inválidas. Verifique seu e-mail e senha.');
+          } else {
+            setMessage('⚠️ Erro ao entrar: ' + error.message);
+          }
+        }
       }
     } catch (error: any) {
       setMessage('Erro inesperado: ' + error.message);
@@ -96,8 +102,8 @@ export function Login() {
               className="text-white/50 text-sm text-center"
             >
               {mode === 'signup'
-                ? 'Preencha seu email para criar sua conta gratuita no QG.'
-                : 'Insira seu email para acessar o Quartel General.'}
+                ? 'Escolha sua senha para criar acesso permanente ao QG.'
+                : 'Insira suas credenciais para acessar o Quartel General.'}
             </motion.p>
           </AnimatePresence>
 
@@ -125,7 +131,7 @@ export function Login() {
           {/* Input de Email */}
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest pl-2">
-              {mode === 'signup' ? 'Seu Email' : 'Seu Email Real'}
+              Seu Email
             </label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
@@ -133,8 +139,27 @@ export function Login() {
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={mode === 'signup' ? 'seu@email.com' : 'marido.perdido@email.com'}
+                placeholder="seu@email.com"
                 required
+                className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-brand-lilac/50 transition-colors placeholder:text-white/20"
+              />
+            </div>
+          </div>
+
+          {/* Input de Senha */}
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest pl-2">
+              Sua Senha
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={6}
                 className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-brand-lilac/50 transition-colors placeholder:text-white/20"
               />
             </div>
@@ -147,8 +172,8 @@ export function Login() {
           >
             <span>
               {loading
-                ? 'Enviando...'
-                : mode === 'signup' ? 'Criar Minha Conta' : 'Entrar no QG'}
+                ? 'Operando...'
+                : mode === 'signup' ? 'Criar e Entrar' : 'Acessar Agora'}
             </span>
             {!loading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
           </button>
@@ -168,9 +193,7 @@ export function Login() {
         </form>
 
         <p className="text-center text-xs text-white/30 mt-8 font-medium">
-          {mode === 'signup'
-            ? 'Ao criar sua conta você aceita sua culpa prévia em qualquer discussão.'
-            : 'Ao entrar você aceita as responsabilidades do lar.'}
+          Ao entrar você aceita que a senha é sua única aliada no QG.
         </p>
       </motion.div>
     </div>

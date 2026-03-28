@@ -6,7 +6,8 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signInWithEmail: (email: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -35,12 +36,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Vamos usar Magic Link (Login sem senha) para facilitar a vida do pai moderno
-  const signInWithEmail = async (email: string) => {
-    return supabase.auth.signInWithOtp({
+  // Login tradicional com senha para entrada direta e permanente
+  const signIn = async (email: string, password: string) => {
+    return await supabase.auth.signInWithPassword({
       email,
+      password,
+    });
+  };
+
+  // Cadastro tradicional com senha e dados do usuário
+  const signUp = async (email: string, password: string, name: string) => {
+    return await supabase.auth.signUp({
+      email,
+      password,
       options: {
-        emailRedirectTo: window.location.origin,
+        data: {
+          full_name: name,
+        },
       },
     });
   };
@@ -50,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signInWithEmail, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
