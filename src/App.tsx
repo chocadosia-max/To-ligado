@@ -43,9 +43,29 @@ function App() {
     return missions.reduce((acc, curr) => curr.completed ? acc + curr.pts : acc, 0);
   }, [missions]);
 
+  const triggerWhatsApp = (message: string) => {
+    const phone = config.wifePhone.replace(/\D/g, '');
+    if (!phone) return;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
+
   const checkMedicine = () => {
     const now = new Date();
-    updateLastMedTime(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    updateLastMedTime(timeStr);
+    triggerWhatsApp(`✅ Relatório de Saúde: Acabei de medicar o(a) pequeno(a) às ${timeStr}. Tudo sob controle! 🫡`);
+  };
+
+  const handleToggleMission = async (id: number | string) => {
+    const mission = missions.find(m => m.id === id);
+    const wasCompleted = mission?.completed;
+    await toggleMissionDb(id);
+    
+    // Se estava incompleta e agora está completa, envia zap
+    if (!wasCompleted && mission) {
+      triggerWhatsApp(`🚀 Missão Cumprida: "${mission.text}" foi finalizada com sucesso! +${mission.pts} pontos pro papai. 😎`);
+    }
   };
 
   const resetAll = () => {
@@ -212,7 +232,7 @@ function App() {
                     <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
                       <Missions 
                         missions={missions} 
-                        onToggle={toggleMissionDb} 
+                        onToggle={handleToggleMission} 
                         onAdd={addMission}
                         onDelete={deleteMission}
                       />
