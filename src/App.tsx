@@ -3,73 +3,56 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ScoreCard } from './components/ScoreCard';
 import { MedicineAlerts } from './components/MedicineAlerts';
 import { Timeline } from './components/Timeline';
-import { Missions, type Mission } from './components/Missions';
+import { Missions } from './components/Missions';
 import { ExcuseGenerator } from './components/ExcuseGenerator';
 import { Agenda } from './components/Agenda';
 import { Ranking } from './components/Ranking';
 import { SettingsComponent } from './components/Settings';
-import { useLocalStorage } from './hooks/useLocalStorage';
+import { useSupabaseData } from './hooks/useSupabaseData';
 import { Settings, ShieldAlert, Home, Calendar, UserRound, LogOut } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
 
 type Tab = 'painel' | 'agenda' | 'ranking' | 'ajustes';
 
-interface AppConfig {
-  userName: string;
-  wifeName: string;
-  sarcasmLevel: number;
-}
 
-const INITIAL_MISSIONS: Mission[] = [
-  { id: 1, text: 'Lavar a louça antes de dormir', completed: false, pts: 10 },
-  { id: 2, text: 'Comprar fralda (Tamanho G)', completed: false, pts: 20 },
-  { id: 3, text: 'Elogiar o cabelo novo', completed: true, pts: 50 },
-];
-
-const DEFAULT_CONFIG: AppConfig = {
-  userName: 'Roberto',
-  wifeName: 'Patrícia',
-  sarcasmLevel: 50,
-};
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('painel');
-  const { session, loading, signOut } = useAuth();
+  const { session, loading: authLoading, signOut } = useAuth();
   
-  // Persistent State (@data-squad)
-  const [missions, setMissions] = useLocalStorage<Mission[]>('tl_missions', INITIAL_MISSIONS);
-  const [lastMedTime, setLastMedTime] = useLocalStorage<string>('tl_last_med', '10:45');
-  const [config, setConfig] = useLocalStorage<AppConfig>('tl_config', DEFAULT_CONFIG);
+  // Persistent State via Supabase (@data-squad)
+  const { 
+    missions, 
+    config, 
+    updateConfig, 
+    toggleMissionDb, 
+    lastMedTime, 
+    updateLastMedTime, 
+    loadingDb 
+  } = useSupabaseData();
 
   // Derived Score (@advisory-board)
   const totalScore = useMemo(() => {
     return missions.reduce((acc, curr) => curr.completed ? acc + curr.pts : acc, 0);
   }, [missions]);
 
-  const toggleMission = (id: number) => {
-    setMissions(missions.map(m => m.id === id ? { ...m, completed: !m.completed } : m));
-  };
-
   const checkMedicine = () => {
     const now = new Date();
-    setLastMedTime(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+    updateLastMedTime(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
   };
 
   const resetAll = () => {
-    if (confirm('Deseja zerar toda a sua vida matrimonial? Isso não pode ser desfeito.')) {
-      setMissions(INITIAL_MISSIONS);
-      setLastMedTime('10:45');
-      setConfig(DEFAULT_CONFIG);
-      setActiveTab('painel');
+    if (confirm('Atenção: A função de reset de todas as missões será implementada em breve na sala de operações.')) {
+      // Future feature: deletar missões do BD ou marcar como uncompleted.
     }
   };
 
-  if (loading) {
+  if (authLoading || loadingDb) {
     return (
       <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center">
         <ShieldAlert className="w-12 h-12 text-brand-lilac animate-pulse mb-4" />
-        <p className="text-white/50 text-sm tracking-widest uppercase font-bold">Conectando ao QG...</p>
+        <p className="text-white/50 text-sm tracking-widest uppercase font-bold">Conectando ao QG Central / Sincronizando Dados...</p>
       </div>
     );
   }
@@ -221,7 +204,7 @@ function App() {
 
                   <div className="space-y-6 md:col-span-5 lg:col-span-4">
                     <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
-                      <Missions missions={missions} onToggle={toggleMission} />
+                      <Missions missions={missions} onToggle={toggleMissionDb} />
                     </div>
                     <ExcuseGenerator />
                   </div>
@@ -233,7 +216,7 @@ function App() {
               {activeTab === 'ajustes' && (
                 <SettingsComponent 
                   config={config} 
-                  onSave={setConfig} 
+                  onSave={updateConfig} 
                   onReset={resetAll} 
                 />
               )}

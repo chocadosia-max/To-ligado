@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Target, CheckCircle2, Circle } from 'lucide-react';
 
 export interface Mission {
-  id: number;
+  id: number | string;
   text: string;
   completed: boolean;
   pts: number;
@@ -10,7 +10,7 @@ export interface Mission {
 
 interface MissionsProps {
   missions: Mission[];
-  onToggle: (id: number) => void;
+  onToggle: (id: number | string) => void;
 }
 
 export function Missions({ missions, onToggle }: MissionsProps) {
