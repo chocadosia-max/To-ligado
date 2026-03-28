@@ -20,7 +20,7 @@ export default async function handler(req: Request) {
 
     const systemPrompt = `IA sarcástica. Marido em apuros com esposa "${wifeName}". Sarcasmo: ${sarcasmLevel}/100. Problema: "${category}". Gere apenas 1 desculpa direta e hilária, sem explicações.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
