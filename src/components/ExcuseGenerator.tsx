@@ -13,6 +13,14 @@ export function ExcuseGenerator({ config, onLogEvent }: ExcuseGeneratorProps) {
   const [excuse, setExcuse] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  const FAILSAFE_EXCUSES = [
+    "O pneu furou bem em frente ao quartel general. Tive que trocar no braço.",
+    "O vizinho me confundiu com um agente secreto e me deteve por 10 minutos para tirar dúvidas sobre geopolítica.",
+    "Meu celular atualizou o sistema bem na hora de mandar a mensagem e o processo de segurança travou tudo.",
+    "O cachorro engoliu a chave do carro, tive que esperar ele 'devolver' ou o chaveiro chegar.",
+    "Fui parado pelo síndico para discutir o futuro do condomínio. Um verdadeiro sequestro emocional."
+  ];
+
   const generateExcuse = async () => {
     setIsGenerating(true);
     setExcuse(null);
@@ -32,12 +40,17 @@ export function ExcuseGenerator({ config, onLogEvent }: ExcuseGeneratorProps) {
       const data = await response.json();
       if (response.ok) {
         setExcuse(data.excuse);
-        onLogEvent?.('Álibi', 'Gerou uma desculpa plausível.', 'pending');
+        onLogEvent?.('Álibi', 'IA gerou desculpa com sucesso.', 'pending');
       } else {
-        setExcuse(data.error || 'A IA gaguejou e a esposa percebeu a mentira. Fim de jogo.');
+        // Fallback para desculpas estáticas se a cota estourar
+        const randomFailsafe = FAILSAFE_EXCUSES[Math.floor(Math.random() * FAILSAFE_EXCUSES.length)];
+        setExcuse(randomFailsafe);
+        onLogEvent?.('Reserva', 'Cota de IA excedida. Álibi de emergência usado.', 'critical');
       }
     } catch (e) {
-      setExcuse('Sem internet na base militar. Você está por conta própria.');
+      const randomFailsafe = FAILSAFE_EXCUSES[Math.floor(Math.random() * FAILSAFE_EXCUSES.length)];
+      setExcuse(randomFailsafe);
+      onLogEvent?.('Reserva', 'Erro de conexão. Álibi local ativado.', 'critical');
     } finally {
       setIsGenerating(false);
     }
