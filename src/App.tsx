@@ -206,7 +206,7 @@ function App() {
                     <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
                       <Missions missions={missions} onToggle={toggleMissionDb} />
                     </div>
-                    <ExcuseGenerator />
+                    <ExcuseGenerator config={config} />
                   </div>
                 </div>
               )}

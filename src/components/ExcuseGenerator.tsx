@@ -1,26 +1,52 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wand2, RefreshCcw, Lock } from 'lucide-react';
+import { Wand2, RefreshCcw, Lock, Copy, CheckCircle2 } from 'lucide-react';
+import type { AppConfig } from '../hooks/useSupabaseData';
 
-export function ExcuseGenerator() {
+interface ExcuseGeneratorProps {
+  config: AppConfig;
+}
+
+export function ExcuseGenerator({ config }: ExcuseGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [excuse, setExcuse] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  const generateExcuse = () => {
+  const generateExcuse = async () => {
     setIsGenerating(true);
     setExcuse(null);
+    setCopied(false);
     
-    // Fake generation delay
-    setTimeout(() => {
-      const excuses = [
-        "Juro que anotei na agenda, mas o app do Google fechou sozinho.",
-        "A tia do café me parou pra contar da cirurgia da vizinha.",
-        "Meu pneu não furou, mas o carro fez um barulho estranho e eu fiquei com medo.",
-        "Eu lembrei! Mas achei que se eu fizesse agora ia estragar a surpresa que tô bolando pra 2029."
-      ];
-      setExcuse(excuses[Math.floor(Math.random() * excuses.length)]);
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wifeName: config.wifeName,
+          sarcasmLevel: config.sarcasmLevel,
+          category: 'Atraso genérico ou esquecimento de pedido'
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setExcuse(data.excuse);
+      } else {
+        setExcuse(data.error || 'A IA gaguejou e a esposa percebeu a mentira. Fim de jogo.');
+      }
+    } catch (e) {
+      setExcuse('Sem internet na base militar. Você está por conta própria.');
+    } finally {
       setIsGenerating(false);
-    }, 1500);
+    }
+  };
+
+  const copyToClipboard = () => {
+    if (excuse) {
+      navigator.clipboard.writeText(excuse);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -76,11 +102,15 @@ export function ExcuseGenerator() {
           >
             <p className="text-sm italic text-white/90">"{excuse}"</p>
             <div className="mt-3 flex space-x-2">
-              <button className="flex-1 py-1.5 rounded-md bg-white/10 text-xs font-semibold text-white/80 hover:bg-white/20 transition-colors">
-                Copiar
+              <button 
+                onClick={copyToClipboard}
+                className="flex-[2] py-2 flex items-center justify-center rounded-md bg-white/10 text-xs font-semibold text-white/80 hover:bg-white/20 transition-colors"
+              >
+                {copied ? <CheckCircle2 className="w-4 h-4 text-brand-success mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                {copied ? 'Copiado!' : 'Copiar Desculpa'}
               </button>
-              <button onClick={generateExcuse} className="p-1.5 rounded-md bg-white/10 text-white/80 hover:bg-white/20 transition-colors">
-                <RefreshCcw className="w-4 h-4" />
+              <button onClick={generateExcuse} className="flex-1 py-2 flex items-center justify-center rounded-md bg-white/10 text-white/80 hover:bg-white/20 transition-colors">
+                <RefreshCcw className="w-4 h-4 mr-2" /> Tentar Outra
               </button>
             </div>
           </motion.div>
