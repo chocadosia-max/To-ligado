@@ -5,6 +5,7 @@ interface SettingsProps {
     userName: string;
     wifeName: string;
     wifePhone: string;
+    userPhone: string;
     sarcasmLevel: number;
   };
   onSave: (newConfig: any) => void;
@@ -35,6 +36,17 @@ export function SettingsComponent({ config, onSave, onReset }: SettingsProps) {
               onChange={(e) => onSave({ ...config, userName: e.target.value })}
               className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-lilac/50 transition-colors"
               placeholder="Ex: Roberto"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-white/40 uppercase tracking-widest pl-1">Seu WhatsApp (Somente Números)</label>
+            <input 
+              type="text" 
+              value={config.userPhone}
+              onChange={(e) => onSave({ ...config, userPhone: e.target.value })}
+              className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-lilac/50 transition-colors"
+              placeholder="Ex: 5511988888888"
             />
           </div>
         </div>

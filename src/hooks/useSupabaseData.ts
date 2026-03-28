@@ -7,7 +7,20 @@ export interface AppConfig {
   userName: string;
   wifeName: string;
   wifePhone: string;
+  userPhone: string;
   sarcasmLevel: number;
+}
+
+export interface SettingsProps {
+  config: {
+    userName: string;
+    wifeName: string;
+    wifePhone: string;
+    userPhone: string;
+    sarcasmLevel: number;
+  };
+  onSave: (newConfig: any) => void;
+  onReset: () => void;
 }
 
 export interface TimelineEvent {
@@ -94,7 +107,8 @@ export function useSupabaseData() {
               id: user.id, 
               user_name: signupName, 
               wife_name: DEFAULT_CONFIG.wifeName,
-              wife_phone: DEFAULT_CONFIG.wifePhone
+              wife_phone: DEFAULT_CONFIG.wifePhone,
+              user_phone: DEFAULT_CONFIG.userPhone
             })
             .select()
             .single();
@@ -106,6 +120,7 @@ export function useSupabaseData() {
             userName: profile.user_name || user.user_metadata?.full_name || DEFAULT_CONFIG.userName,
             wifeName: profile.wife_name || DEFAULT_CONFIG.wifeName,
             wifePhone: profile.wife_phone || DEFAULT_CONFIG.wifePhone,
+            userPhone: profile.user_phone || DEFAULT_CONFIG.userPhone,
             sarcasmLevel: profile.sarcasm_level ?? DEFAULT_CONFIG.sarcasmLevel,
           });
         }
