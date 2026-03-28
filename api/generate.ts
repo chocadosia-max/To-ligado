@@ -1,52 +1,55 @@
-import Anthropic from '@anthropic-ai/sdk';
-
 export const config = {
-  runtime: 'edge', // Using Edge runtime is faster and standard
+  runtime: 'edge', 
 };
-
-// Vercel will inject process.env.ANTHROPIC_API_KEY if configured in Dashboard
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 export default async function handler(req: Request) {
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), { status: 405 });
   }
 
-  // Se a chave não estiver configurada no Vercel
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
     return new Response(JSON.stringify({ 
-      error: 'Chave da Anthropic não encontrada. Configure ANTHROPIC_API_KEY nas variáveis de ambiente do Vercel.' 
+      error: 'Chave do Gemini não encontrada. Configure GEMINI_API_KEY no Vercel.' 
     }), { status: 500, headers: { 'Content-Type': 'application/json' }});
   }
 
   try {
     const { wifeName, sarcasmLevel, category } = await req.json();
 
-    const systemPrompt = `Você é uma inteligência artificial sarcástica especializada em inventar as desculpas mais absurdas, 
-hilárias e (quase) convincentes para salvar maridos de encrencas com a esposa. 
-O marido está em apuros com a esposa cujo nome é "${wifeName}". 
-O nível de sarcasmo da sua resposta deve ser ${sarcasmLevel} em uma escala de 0 a 100 
-(onde 0 = extremamente humilde e com medo, 50 = levemente irônico, e 100 = nível divórcio implacável e muito arriscado).
-A desculpa precisa ser criativa e justificar o seguinte problema/categoria: "${category}". 
-Seja direto, escreva apenas a desculpa (como se fosse o marido falando, na primeira pessoa, ou uma narração caótica). Não dê explicações.`;
+    const systemPrompt = `IA sarcástica. Marido em apuros com esposa "${wifeName}". Sarcasmo: ${sarcasmLevel}/100. Problema: "${category}". Gere apenas 1 desculpa direta e hilária, sem explicações.`;
 
-    const message = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307", // Rápido, barato e muito bom para humor
-      max_tokens: 300,
-      temperature: 0.9,
-      system: systemPrompt,
-      messages: [
-        { role: "user", content: "Mande a desculpa perfeita e rápida, meu casamento depende disso!" }
-      ]
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: systemPrompt },
+              { text: "Mande a desculpa perfeita!" }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.9,
+          maxOutputTokens: 150,
+        }
+      })
     });
 
-    // O retorno de Anthropic tem content que é um array; pegamos block.text se for text
-    const textContent = message.content.find(block => block.type === 'text');
-    const excuse = textContent ? (textContent as any).text : "Sistema de desculpas sobrecarregado (Erro IA).";
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error?.message || 'Erro na API do Gemini');
+    }
 
-    return new Response(JSON.stringify({ excuse }), { 
+    const excuse = data.candidates?.[0]?.content?.parts?.[0]?.text || "Sistema de desculpas sobrecarregado (Erro IA).";
+
+    return new Response(JSON.stringify({ excuse: excuse.trim() }), { 
       status: 200, 
       headers: { 'Content-Type': 'application/json' } 
     });

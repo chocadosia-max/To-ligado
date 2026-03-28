@@ -5,9 +5,10 @@ import type { AppConfig } from '../hooks/useSupabaseData';
 
 interface ExcuseGeneratorProps {
   config: AppConfig;
+  onLogEvent?: (tag: string, content: string, status: any) => void;
 }
 
-export function ExcuseGenerator({ config }: ExcuseGeneratorProps) {
+export function ExcuseGenerator({ config, onLogEvent }: ExcuseGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [excuse, setExcuse] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -31,6 +32,7 @@ export function ExcuseGenerator({ config }: ExcuseGeneratorProps) {
       const data = await response.json();
       if (response.ok) {
         setExcuse(data.excuse);
+        onLogEvent?.('Álibi', 'Gerou uma desculpa plausível.', 'pending');
       } else {
         setExcuse(data.error || 'A IA gaguejou e a esposa percebeu a mentira. Fim de jogo.');
       }
@@ -40,6 +42,7 @@ export function ExcuseGenerator({ config }: ExcuseGeneratorProps) {
       setIsGenerating(false);
     }
   };
+
 
   const copyToClipboard = () => {
     if (excuse) {
@@ -63,7 +66,7 @@ export function ExcuseGenerator({ config }: ExcuseGeneratorProps) {
           <Wand2 className="w-5 h-5 mr-2 text-brand-pink" />
           IA de Desculpas Prontas
         </h3>
-        <p className="text-sm text-white/50">Gerador plausível de historinhas (Powered by Claude)</p>
+        <p className="text-sm text-white/50">Gerador plausível de historinhas (Powered by Gemini)</p>
       </div>
 
       <button 

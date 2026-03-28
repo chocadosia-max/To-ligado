@@ -1,37 +1,12 @@
 import { motion } from 'framer-motion';
 import { Calendar as CalendarIcon, AlertTriangle, PartyPopper } from 'lucide-react';
+import type { AgendaItem } from '../hooks/useSupabaseData';
 
-export function Agenda() {
-  const dates = [
-    {
-      id: 1,
-      day: '15',
-      month: 'OUT',
-      title: 'Aniversário da Sogra',
-      status: 'urgente',
-      desc: 'Comprar presente caro. E flores. E não reclame.',
-      icon: <AlertTriangle className="w-5 h-5 text-brand-danger" />
-    },
-    {
-      id: 2,
-      day: '22',
-      month: 'OUT',
-      title: 'Jantar com o Casal Chato',
-      status: 'pendente',
-      desc: 'Você confirmou semana passada. Não finja esquecimento.',
-      icon: <CalendarIcon className="w-5 h-5 text-brand-warning" />
-    },
-    {
-      id: 3,
-      day: '30',
-      month: 'OUT',
-      title: 'Seu Aniversário',
-      status: 'safe',
-      desc: 'Finalmente um dia pra você. Talvez.',
-      icon: <PartyPopper className="w-5 h-5 text-brand-success" />
-    }
-  ];
+interface AgendaProps {
+  items: AgendaItem[];
+}
 
+export function Agenda({ items }: AgendaProps) {
   return (
     <div className="space-y-6">
       <div className="mb-6">
@@ -40,7 +15,7 @@ export function Agenda() {
       </div>
 
       <div className="space-y-4">
-        {dates.map((item, index) => (
+        {items.map((item, index) => (
           <motion.div 
             key={item.id}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -64,7 +39,11 @@ export function Agenda() {
             <div className="flex-1">
               <h4 className="font-bold text-lg text-white/90 flex items-center">
                 {item.title}
-                <span className="ml-2">{item.icon}</span>
+                <span className="ml-2">
+                  {item.status === 'urgente' && <AlertTriangle className="w-5 h-5 text-brand-danger" />}
+                  {item.status === 'pendente' && <CalendarIcon className="w-5 h-5 text-brand-warning" />}
+                  {item.status === 'safe' && <PartyPopper className="w-5 h-5 text-brand-success" />}
+                </span>
               </h4>
               <p className={`text-sm mt-1 ${
                 item.status === 'urgente' ? 'text-brand-danger/90' : 'text-white/60'
@@ -76,3 +55,4 @@ export function Agenda() {
     </div>
   );
 }
+

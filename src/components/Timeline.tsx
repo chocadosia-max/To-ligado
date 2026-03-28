@@ -1,31 +1,12 @@
 import { motion } from 'framer-motion';
 import { Clock, CheckCircle2 } from 'lucide-react';
+import type { TimelineEvent } from '../hooks/useSupabaseData';
 
-export function Timeline() {
-  const events = [
-    {
-      id: 1,
-      tag: 'Ela Falou',
-      content: 'Comprar pão na volta do trabalho.',
-      time: '15:30',
-      status: 'pending',
-    },
-    {
-      id: 2,
-      tag: 'Aviso Crítico',
-      content: 'Aniversário da sua mãe é sexta. Não compra panela.',
-      time: 'Ontem',
-      status: 'critical',
-    },
-    {
-      id: 3,
-      tag: 'Missão Cumprida',
-      content: 'Tirar o lixo.',
-      time: '08:00',
-      status: 'done',
-    }
-  ];
+interface TimelineProps {
+  events: TimelineEvent[];
+}
 
+export function Timeline({ events }: TimelineProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold tracking-tight">Registro Oficial (Provas)</h3>
@@ -78,3 +59,4 @@ export function Timeline() {
     </div>
   );
 }
+

@@ -24,9 +24,15 @@ function App() {
   // Persistent State via Supabase (@data-squad)
   const { 
     missions, 
+    timeline,
+    agenda,
     config, 
     updateConfig, 
     toggleMissionDb, 
+    addMission,
+    deleteMission,
+    addTimelineEvent,
+    resetAllMissions,
     lastMedTime, 
     updateLastMedTime, 
     loadingDb 
@@ -43,8 +49,8 @@ function App() {
   };
 
   const resetAll = () => {
-    if (confirm('Atenção: A função de reset de todas as missões será implementada em breve na sala de operações.')) {
-      // Future feature: deletar missões do BD ou marcar como uncompleted.
+    if (confirm('Atenção: Deseja zerar o progresso de todas as missões? Isso não pode ser desfeito.')) {
+      resetAllMissions();
     }
   };
 
@@ -198,21 +204,29 @@ function App() {
                     </div>
 
                     <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
-                      <Timeline />
+                      <Timeline events={timeline} />
                     </div>
                   </div>
 
                   <div className="space-y-6 md:col-span-5 lg:col-span-4">
                     <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
-                      <Missions missions={missions} onToggle={toggleMissionDb} />
+                      <Missions 
+                        missions={missions} 
+                        onToggle={toggleMissionDb} 
+                        onAdd={addMission}
+                        onDelete={deleteMission}
+                      />
                     </div>
-                    <ExcuseGenerator config={config} />
+                    <ExcuseGenerator config={config} onLogEvent={addTimelineEvent} />
                   </div>
+
                 </div>
               )}
 
-              {activeTab === 'agenda' && <div className="max-w-2xl mx-auto"><Agenda /></div>}
-              {activeTab === 'ranking' && <div className="max-w-2xl mx-auto"><Ranking /></div>}
+              {activeTab === 'agenda' && <div className="max-w-2xl mx-auto"><Agenda items={agenda} /></div>}
+
+              {activeTab === 'ranking' && <div className="max-w-2xl mx-auto"><Ranking config={config} totalScore={totalScore} /></div>}
+
               {activeTab === 'ajustes' && (
                 <SettingsComponent 
                   config={config} 
