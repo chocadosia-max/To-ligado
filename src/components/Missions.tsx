@@ -1,20 +1,19 @@
 import { motion } from 'framer-motion';
 import { Target, CheckCircle2, Circle } from 'lucide-react';
-import { useState } from 'react';
 
-export function Missions() {
-  const [missions, setMissions] = useState([
-    { id: 1, text: 'Lavar a louça antes de dormir', completed: false, pts: 10 },
-    { id: 2, text: 'Comprar fralda (Tamanho G)', completed: false, pts: 20 },
-    { id: 3, text: 'Elogiar o cabelo novo', completed: true, pts: 50 },
-  ]);
+export interface Mission {
+  id: number;
+  text: string;
+  completed: boolean;
+  pts: number;
+}
 
-  const toggleMission = (id: number) => {
-    setMissions(missions.map(m => 
-      m.id === id ? { ...m, completed: !m.completed } : m
-    ));
-  };
+interface MissionsProps {
+  missions: Mission[];
+  onToggle: (id: number) => void;
+}
 
+export function Missions({ missions, onToggle }: MissionsProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -31,7 +30,7 @@ export function Missions() {
             key={mission.id}
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => toggleMission(mission.id)}
+            onClick={() => onToggle(mission.id)}
             className={`flex items-center p-3 rounded-xl border cursor-pointer transition-colors ${
               mission.completed 
                 ? 'bg-brand-success/10 border-brand-success/20' 

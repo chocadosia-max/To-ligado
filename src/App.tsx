@@ -1,18 +1,66 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ScoreCard } from './components/ScoreCard';
 import { MedicineAlerts } from './components/MedicineAlerts';
 import { Timeline } from './components/Timeline';
-import { Missions } from './components/Missions';
+import { Missions, type Mission } from './components/Missions';
 import { ExcuseGenerator } from './components/ExcuseGenerator';
 import { Agenda } from './components/Agenda';
 import { Ranking } from './components/Ranking';
+import { SettingsComponent } from './components/Settings';
+import { useLocalStorage } from './hooks/useLocalStorage';
 import { Settings, ShieldAlert, Home, Calendar, UserRound } from 'lucide-react';
 
-type Tab = 'painel' | 'agenda' | 'ranking';
+type Tab = 'painel' | 'agenda' | 'ranking' | 'ajustes';
+
+interface AppConfig {
+  userName: string;
+  wifeName: string;
+  sarcasmLevel: number;
+}
+
+const INITIAL_MISSIONS: Mission[] = [
+  { id: 1, text: 'Lavar a louça antes de dormir', completed: false, pts: 10 },
+  { id: 2, text: 'Comprar fralda (Tamanho G)', completed: false, pts: 20 },
+  { id: 3, text: 'Elogiar o cabelo novo', completed: true, pts: 50 },
+];
+
+const DEFAULT_CONFIG: AppConfig = {
+  userName: 'Roberto',
+  wifeName: 'Patrícia',
+  sarcasmLevel: 50,
+};
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('painel');
+  
+  // Persistent State (@data-squad)
+  const [missions, setMissions] = useLocalStorage<Mission[]>('tl_missions', INITIAL_MISSIONS);
+  const [lastMedTime, setLastMedTime] = useLocalStorage<string>('tl_last_med', '10:45');
+  const [config, setConfig] = useLocalStorage<AppConfig>('tl_config', DEFAULT_CONFIG);
+
+  // Derived Score (@advisory-board)
+  const totalScore = useMemo(() => {
+    return missions.reduce((acc, curr) => curr.completed ? acc + curr.pts : acc, 0);
+  }, [missions]);
+
+  const toggleMission = (id: number) => {
+    setMissions(missions.map(m => m.id === id ? { ...m, completed: !m.completed } : m));
+  };
+
+  const checkMedicine = () => {
+    const now = new Date();
+    setLastMedTime(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
+  };
+
+  const resetAll = () => {
+    if (confirm('Deseja zerar toda a sua vida matrimonial? Isso não pode ser desfeito.')) {
+      setMissions(INITIAL_MISSIONS);
+      setLastMedTime('10:45');
+      setConfig(DEFAULT_CONFIG);
+      setActiveTab('painel');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-brand-dark font-sans text-white selection:bg-brand-pink/30 flex flex-col md:flex-row">
@@ -25,7 +73,7 @@ function App() {
           <h1 className="text-xl lg:text-3xl font-black tracking-tighter bg-gradient-to-br from-brand-lilac to-brand-pink text-transparent bg-clip-text">
             Tô Ligado
           </h1>
-          <p className="hidden lg:block text-[10px] text-brand-pink/80 tracking-widest font-bold mt-1">SALVO PELA ESPOSA</p>
+          <p className="hidden lg:block text-[10px] text-brand-pink/80 tracking-widest font-bold mt-1 uppercase">SALVO PELA ESPOSA</p>
         </div>
 
         <button 
@@ -51,7 +99,11 @@ function App() {
         </button>
         
         <div className="hidden md:block flex-1" />
-        <button className="hidden md:flex flex-col items-center lg:flex-row lg:justify-start lg:w-full lg:px-4 space-y-1 lg:space-y-0 lg:space-x-3 text-white/40 hover:text-white/80 transition-colors p-2 rounded-xl hover:bg-white/5">
+        
+        <button 
+          onClick={() => setActiveTab('ajustes')}
+          className={`hidden md:flex flex-col items-center lg:flex-row lg:justify-start lg:w-full lg:px-4 space-y-1 lg:space-y-0 lg:space-x-3 transition-colors p-2 rounded-xl ${activeTab === 'ajustes' ? 'text-brand-lilac bg-brand-lilac/10' : 'text-white/40 hover:text-white/80 hover:bg-white/5'}`}
+        >
           <Settings className="w-6 h-6 lg:w-5 lg:h-5" />
           <span className="text-[10px] lg:text-sm font-bold">Ajustes</span>
         </button>
@@ -70,7 +122,10 @@ function App() {
             </h1>
             <p className="text-xs text-brand-pink/80 tracking-widest font-bold">SALVO PELA ESPOSA</p>
           </div>
-          <button className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors pointer-events-auto">
+          <button 
+            onClick={() => setActiveTab('ajustes')}
+            className={`p-2 rounded-full transition-colors pointer-events-auto ${activeTab === 'ajustes' ? 'bg-brand-lilac/20' : 'bg-white/5 hover:bg-white/10'}`}
+          >
             <Settings className="w-5 h-5 text-white/70" />
           </button>
         </header>
@@ -78,78 +133,80 @@ function App() {
         {/* Desktop Title & Context Bar */}
         <div className="hidden md:flex px-8 pt-10 pb-6 justify-between items-center z-40">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">E aí, sobrevivendo? 👋</h2>
-            <p className="text-sm text-white/50 mt-1">Bem-vindo ao seu painel de redução de danos matrimonial.</p>
+            <h2 className="text-2xl font-bold tracking-tight">E aí, {config.userName}? 👋</h2>
+            <p className="text-sm text-white/50 mt-1">Status atual com {config.wifeName}: <span className="text-brand-lilac font-bold uppercase">{totalScore > 50 ? 'Milagre' : 'Sendo Vigiado'}</span></p>
           </div>
           {activeTab === 'painel' && (
             <div className="px-4 py-2 bg-brand-dark/50 border border-brand-lilac/20 rounded-xl">
-              <span className="text-xs text-brand-lilac uppercase tracking-widest font-black">Status: </span>
-              <span className="text-sm font-bold text-white">Na Corda Bamba</span>
+              <span className="text-xs text-brand-lilac uppercase tracking-widest font-black">Score Semanal: </span>
+              <span className="text-sm font-bold text-white tracking-widest">{totalScore}</span>
             </div>
           )}
         </div>
 
         <main className="px-6 md:px-8 py-6 max-w-md md:max-w-none mx-auto overflow-hidden">
-          {activeTab === 'painel' && (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
-              {/* Left / Main Column */}
-              <div className="space-y-6 md:col-span-7 lg:col-span-8">
-                <ScoreCard score={840} />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              {activeTab === 'painel' && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+                  <div className="space-y-6 md:col-span-7 lg:col-span-8">
+                    <ScoreCard score={totalScore} />
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Modo Pai Presente CTA */}
-                  <motion.div 
-                    whileTap={{ scale: 0.98 }}
-                    className="p-4 rounded-2xl bg-gradient-to-r from-brand-lilac/20 to-brand-pink/20 border border-brand-lilac/30 flex items-center justify-between cursor-pointer shadow-[0_4px_20px_rgba(180,159,220,0.15)] backdrop-blur-sm self-start h-full"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-brand-lilac/30 rounded-lg">
-                        <ShieldAlert className="w-5 h-5 text-brand-lilac" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-bold text-white tracking-wide">Modo Pai Presente</h3>
-                        <p className="text-xs text-white/60">Ativado. Que Deus te ajude.</p>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <motion.div 
+                        whileTap={{ scale: 0.98 }}
+                        className="p-4 rounded-2xl bg-gradient-to-r from-brand-lilac/20 to-brand-pink/20 border border-brand-lilac/30 flex items-center justify-between cursor-pointer shadow-[0_4px_20px_rgba(180,159,220,0.15)] backdrop-blur-sm self-start h-full"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-brand-lilac/30 rounded-lg">
+                            <ShieldAlert className="w-5 h-5 text-brand-lilac" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-white tracking-wide">Modo Pai Presente</h3>
+                            <p className="text-xs text-white/60">Frequência: {config.sarcasmLevel > 50 ? 'Humilhação' : 'Aviso'}</p>
+                          </div>
+                        </div>
+                        <div className="w-10 h-6 shrink-0 bg-brand-pink rounded-full relative shadow-[0_0_10px_rgba(255,97,166,0.5)]">
+                          <div className="absolute top-1 right-1 w-4 h-4 bg-white rounded-full"></div>
+                        </div>
+                      </motion.div>
+
+                      <div className="h-full">
+                        <MedicineAlerts lastTime={lastMedTime} onCheck={checkMedicine} />
                       </div>
                     </div>
-                    <div className="w-10 h-6 shrink-0 bg-brand-pink rounded-full relative shadow-[0_0_10px_rgba(255,97,166,0.5)]">
-                      <div className="absolute top-1 right-1 w-4 h-4 bg-white rounded-full transition-transform"></div>
-                    </div>
-                  </motion.div>
 
-                  <div className="h-full">
-                    <MedicineAlerts />
+                    <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
+                      <Timeline />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6 md:col-span-5 lg:col-span-4">
+                    <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
+                      <Missions missions={missions} onToggle={toggleMission} />
+                    </div>
+                    <ExcuseGenerator />
                   </div>
                 </div>
+              )}
 
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent block md:hidden" />
-
-                <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
-                  <Timeline />
-                </div>
-              </div>
-
-              {/* Right / Side Column */}
-              <div className="space-y-6 md:col-span-5 lg:col-span-4">
-                <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
-                  <Missions />
-                </div>
-                
-                <ExcuseGenerator />
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'agenda' && (
-             <div className="max-w-2xl mx-auto">
-                <Agenda />
-             </div>
-          )}
-
-          {activeTab === 'ranking' && (
-             <div className="max-w-2xl mx-auto">
-                <Ranking />
-             </div>
-          )}
+              {activeTab === 'agenda' && <div className="max-w-2xl mx-auto"><Agenda /></div>}
+              {activeTab === 'ranking' && <div className="max-w-2xl mx-auto"><Ranking /></div>}
+              {activeTab === 'ajustes' && (
+                <SettingsComponent 
+                  config={config} 
+                  onSave={setConfig} 
+                  onReset={resetAll} 
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>
