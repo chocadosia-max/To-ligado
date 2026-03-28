@@ -29,7 +29,11 @@ export function useSupabaseData() {
   const [loadingDb, setLoadingDb] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    // FIX: Se não há usuário logado, desliga o loading e mostra a tela de login
+    if (!user) {
+      setLoadingDb(false);
+      return;
+    }
 
     const loadData = async () => {
       setLoadingDb(true);
@@ -81,16 +85,13 @@ export function useSupabaseData() {
         
         if (missionsData) {
           setMissions(missionsData.map(m => ({
-            id: m.id, // Supabase retorna UUID (string)
+            id: m.id,
             text: m.text,
             completed: m.is_completed,
             pts: m.pts
           })));
         }
 
-        // Temporário: O Remédio nós guardamos no config ou localStorage por enquanto, 
-        // a não ser que criemos tabela. Vamos usar DB local (storage) só para ele se não tiver tabela,
-        // mas para simplificar, usaremos estado por sessão, ou localStorage fallback
         const savedMed = localStorage.getItem('tl_last_med');
         if (savedMed) setLastMedTime(JSON.parse(savedMed));
 
@@ -120,10 +121,8 @@ export function useSupabaseData() {
     
     const newStatus = !missionToUpdate.completed;
     
-    // UI Update Optimista
     setMissions(missions.map(m => m.id === id ? { ...m, completed: newStatus } : m));
     
-    // DB Update
     await supabase
       .from('missions')
       .update({ is_completed: newStatus })
