@@ -35,8 +35,7 @@ function App() {
     resetAllMissions,
     lastMedTime, 
     updateLastMedTime, 
-    loadingDb,
-    refreshData
+    loadingDb
   } = useSupabaseData();
 
   // Derived Score (@advisory-board)

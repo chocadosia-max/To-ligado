@@ -49,23 +49,6 @@ const DEFAULT_CONFIG: AppConfig = {
   sarcasmLevel: 50,
 };
 
-const INITIAL_MISSIONS = [
-  { text: 'Lavar a louça antes de dormir', completed: false, pts: 10 },
-  { text: 'Comprar fralda (Tamanho G)', completed: false, pts: 20 },
-  { text: 'Elogiar o cabelo novo', completed: true, pts: 50 },
-];
-
-const INITIAL_TIMELINE = [
-  { tag: 'Ela Falou', content: 'Comprar pão na volta do trabalho.', time: '15:30', status: 'pending' },
-  { tag: 'Aviso Crítico', content: 'Aniversário da sua mãe é sexta. Não compra panela.', time: 'Ontem', status: 'critical' },
-  { tag: 'Missão Cumprida', content: 'Tirar o lixo.', time: '08:00', status: 'done' }
-];
-
-const INITIAL_AGENDA = [
-  { day: '15', month: 'MAI', title: 'Aniversário da Sogra', status: 'urgente', desc: 'Comprar presente caro. E flores. E não reclame.' },
-  { day: '22', month: 'MAI', title: 'Jantar com o Casal Chato', status: 'pendente', desc: 'Você confirmou semana passada. Não finja esquecimento.' },
-  { day: '30', month: 'MAI', title: 'Seu Aniversário', status: 'safe', desc: 'Finalmente um dia pra você. Talvez.' }
-];
 
 export function useSupabaseData() {
   const { user } = useAuth();
@@ -96,8 +79,44 @@ export function useSupabaseData() {
         });
       }
 
-      if (missionsRes) {
-        setMissions(missionsRes.map(m => ({
+      // 2. Processar Missões
+      let missionsData = missionsRes;
+      if (!missionsData || missionsData.length === 0) {
+        const seedMissions = [
+          { text: 'Lavar a louça antes de dormir', pts: 10, is_completed: false },
+          { text: 'Comprar fralda (Tamanho G)', pts: 20, is_completed: false },
+          { text: 'Elogiar o cabelo novo', pts: 50, is_completed: true },
+        ].map(m => ({ ...m, user_id: user.id }));
+        const { data: seeded } = await supabase.from('missions').insert(seedMissions).select();
+        missionsData = seeded || [];
+      }
+      
+      // 3. Processar Timeline
+      let timelineData = timelineRes;
+      if (!timelineData || timelineData.length === 0) {
+        const seedTimeline = [
+          { tag: 'Ela Falou', content: 'Comprar pão na volta do trabalho.', time_display: '15:30', status: 'pending' },
+          { tag: 'Aviso Crítico', content: 'Aniversário da sua mãe é sexta.', time_display: 'Ontem', status: 'critical' },
+          { tag: 'Missão Cumprida', content: 'Tirar o lixo.', time_display: '08:00', status: 'done' }
+        ].map(t => ({ ...t, user_id: user.id }));
+        const { data: seeded } = await supabase.from('timeline').insert(seedTimeline).select();
+        timelineData = seeded || [];
+      }
+      
+      // 4. Processar Agenda
+      let agendaData = agendaRes;
+      if (!agendaData || agendaData.length === 0) {
+        const seedAgenda = [
+          { day: '15', month: 'MAI', title: 'Aniversário da Sogra', status: 'urgente', description: 'Comprar presente caro.' },
+          { day: '22', month: 'MAI', title: 'Jantar com o Casal Chato', status: 'pendente', description: 'Confirmado.' },
+          { day: '30', month: 'MAI', title: 'Seu Aniversário', status: 'safe', description: 'Talvez.' }
+        ].map(a => ({ ...a, user_id: user.id }));
+        const { data: seeded } = await supabase.from('agenda').insert(seedAgenda).select();
+        agendaData = seeded || [];
+      }
+
+      if (missionsData) {
+        setMissions(missionsData.map(m => ({
           id: m.id,
           text: m.text,
           completed: m.is_completed,
@@ -105,8 +124,8 @@ export function useSupabaseData() {
         })));
       }
 
-      if (timelineRes) {
-        setTimeline(timelineRes.map(t => ({
+      if (timelineData) {
+        setTimeline(timelineData.map(t => ({
           id: t.id,
           tag: t.tag,
           content: t.content,
@@ -115,8 +134,8 @@ export function useSupabaseData() {
         })));
       }
 
-      if (agendaRes) {
-        setAgenda(agendaRes.map(a => ({
+      if (agendaData) {
+        setAgenda(agendaData.map(a => ({
           id: a.id,
           day: a.day,
           month: a.month,
@@ -196,5 +215,5 @@ export function useSupabaseData() {
     addTimelineEvent('Saúde', 'Medicamento tomado com sucesso.', 'done');
   };
 
-  return { missions, timeline, addTimelineEvent, agenda, config, updateConfig, toggleMissionDb, addMission, deleteMission, resetAllMissions, lastMedTime, updateLastMedTime, loadingDb, refreshData: loadData };
+  return { missions, timeline, addTimelineEvent, agenda, config, updateConfig, toggleMissionDb, addMission, deleteMission, resetAllMissions, lastMedTime, updateLastMedTime, loadingDb };
 }
