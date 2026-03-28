@@ -44,6 +44,7 @@ const DEFAULT_CONFIG: AppConfig = {
   userName: 'Soldado',
   wifeName: 'Comandante',
   wifePhone: '',
+  userPhone: '',
   sarcasmLevel: 50,
 };
 
