@@ -14,11 +14,21 @@ export function ExcuseGenerator({ config, onLogEvent }: ExcuseGeneratorProps) {
   const [copied, setCopied] = useState(false);
 
   const FAILSAFE_EXCUSES = [
-    "O pneu furou bem em frente ao quartel general. Tive que trocar no braço.",
-    "O vizinho me confundiu com um agente secreto e me deteve por 10 minutos para tirar dúvidas sobre geopolítica.",
-    "Meu celular atualizou o sistema bem na hora de mandar a mensagem e o processo de segurança travou tudo.",
-    "O cachorro engoliu a chave do carro, tive que esperar ele 'devolver' ou o chaveiro chegar.",
-    "Fui parado pelo síndico para discutir o futuro do condomínio. Um verdadeiro sequestro emocional."
+    "O pneu furou bem em frente ao quartel general. Tive que trocar no braço, enquanto um gato me julgava.",
+    "O vizinho me confundiu com um agente secreto e me deteve por 10 minutos para tirar dúvidas sobre geopolítica e churrasco.",
+    "Meu celular atualizou o sistema bem na hora de mandar a mensagem. O processo de segurança do banco travou meu cérebro junto.",
+    "O cachorro engoliu a chave do carro. Tive que esperar a natureza (ou o chaveiro) seguir seu curso.",
+    "Fui parado pelo síndico para discutir o futuro do condomínio. Um verdadeiro sequestro emocional sem pedido de resgate.",
+    "Entrei em um loop temporal no corredor do supermercado tentando decidir entre papel higiênico folha dupla ou tripla.",
+    "Fui abduzido por extraterrestres, mas eles me devolveram porque eu não parava de falar que precisava chegar em casa logo.",
+    "Um enxame de abelhas resolveu fazer uma convenção no capô do meu carro. Tive que esperar a ata ser assinada.",
+    "O GPS entrou em modo depressivo e me levou para dar uma volta no quarteirão 'para a gente pensar na vida'.",
+    "Estava meditando sobre como ser o marido perfeito e acabei transcendendo o tempo e o espaço por alguns minutos.",
+    "Fui parado por uma velhinha que precisava de ajuda para atravessar a rua... e depois para achar o gato... e depois para configurar o Zap.",
+    "Um unicórnio atravessou a frente do carro. Tive que parar para conferir se eu não estava delirando de fome.",
+    "O botão da camisa estourou e tive que fazer uma cirurgia de emergência com um clipe de papel para não chegar indecente.",
+    "A gravidade estava 2% mais forte hoje no caminho de volta, o que atrasou consideravelmente meu deslocamento.",
+    "Fui atingido por um raio de procrastinação vindo de um satélite chinês desgovernado. Só passou agora."
   ];
 
   const generateExcuse = async () => {
