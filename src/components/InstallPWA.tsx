@@ -3,29 +3,22 @@ import { Download, Share } from 'lucide-react';
 
 export function InstallAppButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     const handler = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setIsVisible(true);
     };
 
     window.addEventListener('beforeinstallprompt', handler);
 
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    const matchStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
     const checkIsIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     
-    if (checkIsIOS && !isStandalone) {
-       setIsIOS(true);
-       setIsVisible(true);
-    }
-
-    if (isStandalone) {
-      setIsVisible(false);
-    }
+    setIsStandalone(matchStandalone);
+    setIsIOS(checkIsIOS);
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
@@ -37,7 +30,7 @@ export function InstallAppButton() {
     }
 
     if (!deferredPrompt) {
-       alert("Abra as opções do seu navegador Chrome e selecione 'Instalar Aplicativo'.");
+       alert("No seu celular (Android): Toque nos 3 pontos (menu) do navegador e selecione 'Adicionar à tela inicial' ou 'Instalar Aplicativo'.\n\nNo PC: Clique no ícone de instalação direto na barra de endereços lá em cima.");
        return;
     }
     
@@ -45,12 +38,13 @@ export function InstallAppButton() {
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
-      setIsVisible(false);
+      setIsStandalone(true);
     }
     setDeferredPrompt(null);
   };
 
-  if (!isVisible) return null;
+  // Se já tiver instalado e rodando como app, o botão de fato pode sumir
+  if (isStandalone) return null;
 
   return (
     <button 
