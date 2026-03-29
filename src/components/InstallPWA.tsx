@@ -3,7 +3,6 @@ import { Download, Share } from 'lucide-react';
 
 export function InstallAppButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
@@ -14,10 +13,7 @@ export function InstallAppButton() {
 
     window.addEventListener('beforeinstallprompt', handler);
 
-    const matchStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
     const checkIsIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    
-    setIsStandalone(matchStandalone);
     setIsIOS(checkIsIOS);
 
     return () => window.removeEventListener('beforeinstallprompt', handler);
@@ -30,21 +26,16 @@ export function InstallAppButton() {
     }
 
     if (!deferredPrompt) {
-       alert("No seu celular (Android): Toque nos 3 pontos (menu) do navegador e selecione 'Adicionar à tela inicial' ou 'Instalar Aplicativo'.\n\nNo PC: Clique no ícone de instalação direto na barra de endereços lá em cima.");
+       alert("No seu celular (Android): Toque nos 3 pontos (menu) do navegador e selecione 'Adicionar à tela inicial' ou 'Instalar Aplicativo'.\n\nNo PC: Clique no ícone de instalação especial que fica lá na barra de endereços (perto do ícone de estrela/favoritos).");
        return;
     }
     
     deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    await deferredPrompt.userChoice;
     
-    if (outcome === 'accepted') {
-      setIsStandalone(true);
-    }
+    // reset prompt
     setDeferredPrompt(null);
   };
-
-  // Se já tiver instalado e rodando como app, o botão de fato pode sumir
-  if (isStandalone) return null;
 
   return (
     <button 
