@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Target, CheckCircle2, Circle, Plus, Trash2, X } from 'lucide-react';
+import { Target, Check, Plus, Trash2, X } from 'lucide-react';
 
 export interface Mission {
   id: number | string;
@@ -92,28 +92,26 @@ export function Missions({ missions, onToggle, onAdd, onDelete }: MissionsProps)
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, scale: 0.9, height: 0, overflow: 'hidden' }}
             whileHover={{ scale: 1.01 }}
-            className={`flex items-center p-3 rounded-xl border transition-colors group bg-brand-card border-white/5 hover:border-brand-lilac/30`}
+            className={`flex items-center p-2.5 rounded-xl border transition-colors group bg-brand-card border-white/5 hover:border-brand-lilac/30`}
           >
-            <div className="mr-3 cursor-pointer" onClick={() => onToggle(mission.id)}>
+            <div className="mr-3 cursor-pointer shrink-0" onClick={() => onToggle(mission.id)}>
               {mission.completed ? (
-                <CheckCircle2 className="w-5 h-5 text-brand-success" />
+                <div className="w-5 h-5 rounded-full bg-brand-success flex items-center justify-center">
+                  <Check className="text-brand-dark w-3 h-3" strokeWidth={4} />
+                </div>
               ) : (
-                <Circle className="w-5 h-5 text-white/30" />
+                <div className="w-5 h-5 rounded-full border-2 border-white/20 group-hover:border-brand-lilac/50" />
               )}
             </div>
             
-            <p className={`flex-1 text-sm cursor-pointer ${
-              mission.completed ? 'text-white/40 line-through' : 'text-white/90'
-            }`} onClick={() => onToggle(mission.id)}>
-              {mission.text}
-            </p>
+            <div className="flex-1 min-w-0">
+              <span className={`text-sm font-medium block truncate ${mission.completed ? 'text-white/30 line-through' : 'text-white/90'}`}>
+                {mission.text}
+              </span>
+              <span className="text-[9px] font-black text-brand-lilac/70 uppercase tracking-widest">{mission.pts} pontos</span>
+            </div>
 
             <div className="flex items-center space-x-2">
-              <span className={`text-xs font-bold ${
-                mission.completed ? 'text-brand-success/60' : 'text-brand-lilac'
-              }`}>
-                +{mission.pts}
-              </span>
               <button 
                 onClick={() => onDelete(mission.id)}
                 className="p-1 text-white/10 hover:text-brand-danger transition-colors opacity-0 group-hover:opacity-100"

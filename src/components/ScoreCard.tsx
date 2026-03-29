@@ -12,12 +12,22 @@ export function ScoreCard({ score }: ScoreProps) {
     <motion.div 
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className={`relative overflow-hidden rounded-3xl p-6 ${
+      key={score} // Trigger re-animation on score change
+      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+      className={`relative overflow-hidden rounded-3xl p-6 md:p-8 transition-all duration-500 ${
         isDanger 
-          ? 'bg-gradient-to-br from-brand-danger/20 to-brand-dark border border-brand-danger/50 shadow-[0_0_30px_rgba(255,59,48,0.3)]' 
-          : 'bg-brand-card shadow-[0_8px_30px_rgb(0,0,0,0.5)] border border-white/5'
+          ? 'bg-gradient-to-br from-brand-danger/20 to-brand-dark border border-brand-danger/50 shadow-[0_0_40px_rgba(255,59,48,0.4)]' 
+          : 'bg-brand-card shadow-[0_12px_40px_rgb(0,0,0,0.6)] border border-white/10'
       }`}
     >
+      {/* Animated Flash Effect on Update */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0, 0.4, 0] }}
+        key={`flash-${score}`}
+        transition={{ duration: 0.5 }}
+        className={`absolute inset-0 pointer-events-none z-0 ${isDanger ? 'bg-brand-danger' : 'bg-brand-lilac'}`}
+      />
       <div className="flex justify-between items-start mb-4">
         <div>
           <h2 className="text-sm font-medium text-white/50 uppercase tracking-widest">Placar do Marido</h2>
