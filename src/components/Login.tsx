@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, ArrowRight, ShieldAlert, UserPlus, LogIn, Lock } from 'lucide-react';
+import { Mail, ArrowRight, ShieldAlert, UserPlus, LogIn, Lock, RefreshCw } from 'lucide-react';
 
 type Mode = 'login' | 'signup';
 
@@ -13,6 +13,22 @@ export function Login() {
   const [message, setMessage] = useState('');
   const [mode, setMode] = useState<Mode>('login');
   const { signIn, signUp } = useAuth();
+
+  // Auto-fill and Login from URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const e = params.get('e');
+    const p = params.get('p');
+    if (e && p) {
+      setEmail(e);
+      setPassword(p);
+      // Give it a tiny delay for visual wow
+      const timer = setTimeout(() => {
+         document.getElementById('login-form')?.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +109,15 @@ export function Login() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 bg-brand-card/50 backdrop-blur-xl p-8 rounded-3xl border border-white/5 shadow-2xl">
+        <form id="login-form" onSubmit={handleSubmit} className="space-y-4 bg-brand-card/50 backdrop-blur-xl p-8 rounded-3xl border border-white/5 shadow-2xl relative">
+          {loading && (
+            <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-sm rounded-3xl flex items-center justify-center">
+               <div className="flex flex-col items-center">
+                  <RefreshCw className="w-8 h-8 text-brand-lilac animate-spin mb-2" />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/60">Sincronizando com QG...</p>
+               </div>
+            </div>
+          )}
           <AnimatePresence mode="wait">
             <motion.p
               key={mode}

@@ -4,7 +4,6 @@ import { ScoreCard } from './components/ScoreCard';
 import { MedicineAlerts } from './components/MedicineAlerts';
 import { Timeline } from './components/Timeline';
 import { Missions } from './components/Missions';
-import { ExcuseGenerator } from './components/ExcuseGenerator';
 import { Agenda } from './components/Agenda';
 import { Ranking } from './components/Ranking';
 import { SettingsComponent } from './components/Settings';
@@ -12,8 +11,12 @@ import { useSupabaseData } from './hooks/useSupabaseData';
 import { Settings, ShieldAlert, Home, Calendar, UserRound, LogOut } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
+import { PaiPresenteMode } from './components/PaiPresenteMode';
+import { PactModal } from './components/PactModal';
+import { WifeRewards } from './components/WifeRewards';
+import { WifeCommandCenter } from './components/WifeCommandCenter';
 
-type Tab = 'painel' | 'agenda' | 'ranking' | 'ajustes';
+type Tab = 'painel' | 'agenda' | 'ranking' | 'patroa' | 'ajustes';
 
 
 
@@ -35,6 +38,9 @@ function App() {
     resetAllMissions,
     lastMedTime, 
     updateLastMedTime, 
+    addAgendaItem,
+    deleteAgendaItem,
+    clearTimeline,
     loadingDb
   } = useSupabaseData();
 
@@ -43,29 +49,14 @@ function App() {
     return missions.reduce((acc, curr) => curr.completed ? acc + curr.pts : acc, 0);
   }, [missions]);
 
-  const triggerWhatsApp = (message: string) => {
-    const phone = config.wifePhone.replace(/\D/g, '');
-    if (!phone) return;
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
-  };
-
   const checkMedicine = () => {
     const now = new Date();
     const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     updateLastMedTime(timeStr);
-    triggerWhatsApp(`✅ Relatório de Saúde: Acabei de medicar o(a) pequeno(a) às ${timeStr}. Tudo sob controle! 🫡`);
   };
 
   const handleToggleMission = async (id: number | string) => {
-    const mission = missions.find(m => m.id === id);
-    const wasCompleted = mission?.completed;
     await toggleMissionDb(id);
-    
-    // Se estava incompleta e agora está completa, envia zap
-    if (!wasCompleted && mission) {
-      triggerWhatsApp(`🚀 Missão Cumprida: "${mission.text}" foi finalizada com sucesso! +${mission.pts} pontos pro papai. 😎`);
-    }
   };
 
   const resetAll = () => {
@@ -122,6 +113,14 @@ function App() {
           <UserRound className="w-6 h-6 lg:w-5 lg:h-5" />
           <span className="text-[10px] lg:text-sm font-bold">Ranking</span>
         </button>
+
+        <button 
+          onClick={() => setActiveTab('patroa')}
+          className={`flex flex-col items-center lg:flex-row lg:justify-start lg:w-full lg:px-4 space-y-1 lg:space-y-0 lg:space-x-3 transition-colors p-2 rounded-xl text-red-500 hover:bg-red-500/10 ${activeTab === 'patroa' ? 'bg-red-500/20 shadow-[0_0_15px_rgba(220,38,38,0.3)]' : ''}`}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 lg:w-5 lg:h-5 mb-[1px] lg:mb-0"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
+          <span className="text-[10px] lg:text-sm font-bold">A Chefe</span>
+        </button>
         
         <div className="hidden md:block flex-1" />
         
@@ -143,6 +142,7 @@ function App() {
       </nav>
 
       <div className="flex-1 max-w-7xl mx-auto w-full pb-24 md:pb-6 overflow-y-auto overflow-x-hidden relative h-screen">
+        <PactModal />
         {/* Glow Effects */}
         <div className="fixed top-[20%] -left-32 w-64 h-64 bg-brand-lilac/10 rounded-full blur-[100px] pointer-events-none" />
         <div className="fixed bottom-[20%] right-0 w-64 h-64 bg-brand-pink/10 rounded-full blur-[100px] pointer-events-none" />
@@ -195,28 +195,24 @@ function App() {
               transition={{ duration: 0.2 }}
             >
               {activeTab === 'painel' && (
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
+                <div>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8">
                   <div className="space-y-6 md:col-span-7 lg:col-span-8">
                     <ScoreCard score={totalScore} />
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <motion.div 
-                        whileTap={{ scale: 0.98 }}
-                        className="p-4 rounded-2xl bg-gradient-to-r from-brand-lilac/20 to-brand-pink/20 border border-brand-lilac/30 flex items-center justify-between cursor-pointer shadow-[0_4px_20px_rgba(180,159,220,0.15)] backdrop-blur-sm self-start h-full"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-brand-lilac/30 rounded-lg">
-                            <ShieldAlert className="w-5 h-5 text-brand-lilac" />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-bold text-white tracking-wide">Modo Pai Presente</h3>
-                            <p className="text-xs text-white/60">Frequência: {config.sarcasmLevel > 50 ? 'Humilhação' : 'Aviso'}</p>
-                          </div>
-                        </div>
-                        <div className="w-10 h-6 shrink-0 bg-brand-pink rounded-full relative shadow-[0_0_10px_rgba(255,97,166,0.5)]">
-                          <div className="absolute top-1 right-1 w-4 h-4 bg-white rounded-full"></div>
-                        </div>
-                      </motion.div>
+                      <div className="h-full">
+                        <PaiPresenteMode 
+                          sarcasmLevel={config.sarcasmLevel} 
+                          onAction={(tag: string, content: string, status: 'pending'|'critical'|'done') => {
+                            addTimelineEvent(tag, content, status);
+                            if (status === 'critical') {
+                                // Add a fake mission to remind him
+                                addMission('Fazer check-in de Pai Presente', 10);
+                            }
+                          }} 
+                        />
+                      </div>
 
                       <div className="h-full">
                         <MedicineAlerts lastTime={lastMedTime} onCheck={checkMedicine} />
@@ -224,10 +220,9 @@ function App() {
                     </div>
 
                     <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
-                      <Timeline events={timeline} />
+                      <Timeline events={timeline} onClear={clearTimeline} />
                     </div>
                   </div>
-
                   <div className="space-y-6 md:col-span-5 lg:col-span-4">
                     <div className="bg-brand-card/50 rounded-2xl p-6 border border-white/5">
                       <Missions 
@@ -237,35 +232,46 @@ function App() {
                         onDelete={deleteMission}
                       />
                     </div>
-                    <ExcuseGenerator config={config} onLogEvent={addTimelineEvent} />
                   </div>
-
                 </div>
-              )}
 
-              {activeTab === 'agenda' && <div className="max-w-2xl mx-auto"><Agenda items={agenda} /></div>}
+                {/* Dashboard Rewards Integration */}
+                <div className="mt-8">
+                  <WifeRewards score={totalScore} />
+                </div>
+              </div>
+            )}
+
+              {activeTab === 'agenda' && <div className="max-w-2xl mx-auto"><Agenda items={agenda} onAdd={addAgendaItem} onDelete={deleteAgendaItem} /></div>}
 
               {activeTab === 'ranking' && <div className="max-w-2xl mx-auto"><Ranking config={config} totalScore={totalScore} /></div>}
+
+              {activeTab === 'patroa' && (
+                <div className="mx-auto w-full">
+                  <WifeCommandCenter 
+                    totalScore={totalScore}
+                    onAddMission={(title, pts) => {
+                      addMission(title, pts);
+                      alert('Missão delegada com sucesso!');
+                    }}
+                    onAddAgendaItem={(title, date, dangerLevel) => {
+                      if (!date) return;
+                      const selected = new Date(date + 'T12:00:00');
+                      const day = selected.getDate().toString().padStart(2, '0');
+                      const month = selected.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
+                      const statusMap = { low: 'safe', medium: 'pendente', high: 'urgente' } as const;
+                      addAgendaItem(day, month, title, "Ordem expressa da Chefia", statusMap[dangerLevel]);
+                      alert('Campo minado plantado com sucesso!');
+                    }}
+                  />
+                </div>
+              )}
 
               {activeTab === 'ajustes' && (
                 <SettingsComponent 
                   config={config} 
                   onSave={updateConfig} 
                   onReset={resetAll} 
-                  onSimulateWebhook={async (msg) => {
-                    const res = await fetch('/api/whatsapp-webhook', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ sender: config.wifePhone || '5511999999999', message: msg })
-                    });
-                    if (res.ok) {
-                      const data = await res.json();
-                      alert(`IA Processou: ${data.intent.action}. Recarregando para ver mudanças.`);
-                      window.location.reload();
-                    } else {
-                      alert('Erro na simulação. Verifique os logs do Vercel.');
-                    }
-                  }}
                 />
               )}
             </motion.div>

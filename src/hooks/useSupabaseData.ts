@@ -58,6 +58,7 @@ export function useSupabaseData() {
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
   const [lastMedTime, setLastMedTime] = useState<string>('10:45');
   const [loadingDb, setLoadingDb] = useState(true);
+  const [targetUserId, setTargetUserId] = useState<string | null>(null);
 
   const loadData = async () => {
     if (!user) return;
@@ -65,9 +66,12 @@ export function useSupabaseData() {
     
     try {
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      const { data: missionsRes } = await supabase.from('missions').select('*').eq('user_id', user.id).order('created_at', { ascending: true });
-      const { data: timelineRes } = await supabase.from('timeline').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-      const { data: agendaRes } = await supabase.from('agenda').select('*').eq('user_id', user.id).order('created_at', { ascending: true });
+      const activeTargetId = profile?.husband_id || user.id;
+      setTargetUserId(activeTargetId);
+
+      const { data: missionsRes } = await supabase.from('missions').select('*').eq('user_id', activeTargetId).order('created_at', { ascending: true });
+      const { data: timelineRes } = await supabase.from('timeline').select('*').eq('user_id', activeTargetId).order('created_at', { ascending: false });
+      const { data: agendaRes } = await supabase.from('agenda').select('*').eq('user_id', activeTargetId).order('created_at', { ascending: true });
 
       if (profile) {
         setConfig({
@@ -94,7 +98,7 @@ export function useSupabaseData() {
           { text: 'Lavar a louça antes de dormir', pts: 10, is_completed: false },
           { text: 'Comprar fralda (Tamanho G)', pts: 20, is_completed: false },
           { text: 'Elogiar o cabelo novo', pts: 50, is_completed: true },
-        ].map(m => ({ ...m, user_id: user.id }));
+        ].map(m => ({ ...m, user_id: activeTargetId }));
         const { data: seeded } = await supabase.from('missions').insert(seedMissions).select();
         missionsData = seeded || [];
       }
@@ -106,7 +110,7 @@ export function useSupabaseData() {
           { tag: 'Ela Falou', content: 'Comprar pão na volta do trabalho.', time_display: '15:30', status: 'pending' },
           { tag: 'Aviso Crítico', content: 'Aniversário da sua mãe é sexta.', time_display: 'Ontem', status: 'critical' },
           { tag: 'Missão Cumprida', content: 'Tirar o lixo.', time_display: '08:00', status: 'done' }
-        ].map(t => ({ ...t, user_id: user.id }));
+        ].map(t => ({ ...t, user_id: activeTargetId }));
         const { data: seeded } = await supabase.from('timeline').insert(seedTimeline).select();
         timelineData = seeded || [];
       }
@@ -118,7 +122,7 @@ export function useSupabaseData() {
           { day: '15', month: 'MAI', title: 'Aniversário da Sogra', status: 'urgente', description: 'Comprar presente caro.' },
           { day: '22', month: 'MAI', title: 'Jantar com o Casal Chato', status: 'pendente', description: 'Confirmado.' },
           { day: '30', month: 'MAI', title: 'Seu Aniversário', status: 'safe', description: 'Talvez.' }
-        ].map(a => ({ ...a, user_id: user.id }));
+        ].map(a => ({ ...a, user_id: activeTargetId }));
         const { data: seeded } = await supabase.from('agenda').insert(seedAgenda).select();
         agendaData = seeded || [];
       }
@@ -195,31 +199,31 @@ export function useSupabaseData() {
     const newStatus = !missionToUpdate.completed;
     setMissions(missions.map(m => m.id === id ? { ...m, completed: newStatus } : m));
     if (newStatus) addTimelineEvent('Missão', `Cumpriu: ${missionToUpdate.text}`, 'done');
-    await supabase.from('missions').update({ is_completed: newStatus }).eq('id', id).eq('user_id', user.id);
+    await supabase.from('missions').update({ is_completed: newStatus }).eq('id', id).eq('user_id', targetUserId);
   };
 
   const addMission = async (text: string, pts: number) => {
-    if (!user) return;
-    const { data, error } = await supabase.from('missions').insert({ user_id: user.id, text, pts, is_completed: false }).select().single();
+    if (!targetUserId) return;
+    const { data, error } = await supabase.from('missions').insert({ user_id: targetUserId, text, pts, is_completed: false }).select().single();
     if (data) setMissions([...missions, { id: data.id, text: data.text, completed: data.is_completed, pts: data.pts }]);
     return { error };
   };
 
   const deleteMission = async (id: number | string) => {
-    if (!user) return;
+    if (!targetUserId) return;
     setMissions(missions.filter(m => m.id !== id));
-    await supabase.from('missions').delete().eq('id', id).eq('user_id', user.id);
+    await supabase.from('missions').delete().eq('id', id).eq('user_id', targetUserId);
   };
 
   const resetAllMissions = async () => {
-    if (!user) return;
+    if (!targetUserId) return;
     setMissions(missions.map(m => ({ ...m, completed: false })));
-    await supabase.from('missions').update({ is_completed: false }).eq('user_id', user.id);
+    await supabase.from('missions').update({ is_completed: false }).eq('user_id', targetUserId);
   };
 
   const addTimelineEvent = async (tag: string, content: string, status: 'pending' | 'critical' | 'done') => {
-    if (!user) return;
-    const { data } = await supabase.from('timeline').insert({ user_id: user.id, tag, content, time_display: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status }).select().single();
+    if (!targetUserId) return;
+    const { data } = await supabase.from('timeline').insert({ user_id: targetUserId, tag, content, time_display: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), status }).select().single();
     if (data) setTimeline([{ id: data.id, tag: data.tag, content: data.content, time: data.time_display, status: data.status }, ...timeline]);
   };
 
@@ -229,5 +233,24 @@ export function useSupabaseData() {
     addTimelineEvent('Saúde', 'Medicamento tomado com sucesso.', 'done');
   };
 
-  return { missions, timeline, addTimelineEvent, agenda, config, updateConfig, toggleMissionDb, addMission, deleteMission, resetAllMissions, lastMedTime, updateLastMedTime, loadingDb };
+  const addAgendaItem = async (day: string, month: string, title: string, desc: string, status: 'urgente' | 'pendente' | 'safe') => {
+    if (!targetUserId) return;
+    const { data, error } = await supabase.from('agenda').insert({ user_id: targetUserId, day, month, title, description: desc, status }).select().single();
+    if (data) setAgenda([...agenda, { id: data.id, day: data.day, month: data.month, title: data.title, desc: data.description, status: data.status }]);
+    return { error };
+  };
+
+  const deleteAgendaItem = async (id: number | string) => {
+    if (!targetUserId) return;
+    setAgenda(agenda.filter(a => a.id !== id));
+    await supabase.from('agenda').delete().eq('id', id).eq('user_id', targetUserId);
+  };
+
+  const clearTimeline = async () => {
+    if (!targetUserId) return;
+    setTimeline([]);
+    await supabase.from('timeline').delete().eq('user_id', targetUserId);
+  };
+
+  return { missions, timeline, addTimelineEvent, clearTimeline, agenda, config, updateConfig, toggleMissionDb, addMission, deleteMission, resetAllMissions, lastMedTime, updateLastMedTime, addAgendaItem, deleteAgendaItem, loadingDb };
 }

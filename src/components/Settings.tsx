@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { User, Heart, Zap, Save, RefreshCw, MessageCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Heart, Zap, Save, RefreshCw, Share2, Key, Copy, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
 interface SettingsProps {
   config: {
@@ -11,12 +13,67 @@ interface SettingsProps {
   };
   onSave: (newConfig: any) => void;
   onReset: () => void;
-  onSimulateWebhook?: (msg: string) => void;
 }
 
-export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }: SettingsProps) {
+export function SettingsComponent({ config, onSave, onReset }: SettingsProps) {
   const [localConfig, setLocalConfig] = useState(config);
+
+  // Sincroniza quando o Supabase terminar de carregar os dados reais
+  useEffect(() => {
+    setLocalConfig(config);
+  }, [config]);
   const [isSaving, setIsSaving] = useState(false);
+  const [wifeAccess, setWifeAccess] = useState<{ email: string, pass: string } | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const generateWifeAccess = async () => {
+    setIsGenerating(true);
+    try {
+      // 1. Gerar credenciais sarcásticas
+      const prefixes = ['comandante', 'geral', 'a_braba', 'cerebro_real', 'dona_do_qg', 'chefe_suprema'];
+      const domains = ['toligado.io', 'pazeterna.app', 'sem-dr.com', 'mandachuva.online'];
+      const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+      const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+      const randomNum = Math.floor(Math.random() * 9999);
+      
+      const email = `${randomPrefix}.${randomNum}@${randomDomain}`;
+      const pass = `paz_eterna_${Math.floor(Math.random() * 1000)}`;
+
+      // 2. Criar o usuário no Supabase (ignorando erro se já existir por azar do random)
+      // Usamos um client temporário para não deslogar o marido
+      const tempSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY,
+        { auth: { persistSession: false } }
+      );
+
+      const { data: authData, error: authError } = await tempSupabase.auth.signUp({
+        email,
+        password: pass,
+        options: { data: { full_name: `Patroa de ${localConfig.userName}` } }
+      });
+
+      if (authError) throw authError;
+
+      // 3. Vincular o novo usuário ao marido atual no banco de dados
+      if (authData.user) {
+        const { error: linkError } = await supabase
+          .from('profiles')
+          .update({ husband_id: (await supabase.auth.getUser()).data.user?.id })
+          .eq('id', authData.user.id);
+        
+        if (linkError) throw linkError;
+      }
+
+      setWifeAccess({ email, pass });
+    } catch (e: any) {
+      console.error(e);
+      alert('Falha ao gerar acesso diplomático: ' + e.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -126,33 +183,83 @@ export function SettingsComponent({ config, onSave, onReset, onSimulateWebhook }
           </div>
         </div>
 
-        {/* Simulação Bot WhatsApp */}
-        <div className="bg-brand-success/10 p-6 rounded-3xl border border-brand-success/20 backdrop-blur-sm space-y-4">
-          <div className="flex items-center space-x-3 mb-2">
-            <MessageCircle className="w-5 h-5 text-brand-success" />
-            <h3 className="font-bold text-white">Simulador de Comando (Dela)</h3>
+        {/* Convite Irrecusável */}
+        <div className="bg-brand-card/50 p-6 rounded-3xl border border-brand-lilac/30 backdrop-blur-sm space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+               <div className="flex items-center space-x-3 mb-2">
+                 <Share2 className="w-5 h-5 text-brand-lilac" />
+                 <h3 className="font-bold text-white tracking-tight">Convite Irrecusável</h3>
+               </div>
+               <p className="text-xs text-white/50 max-w-sm">
+                 Gere um link para a patroa acessar. O link diz: "Oi amor, instalei seu novo cérebro. Clica aqui pra eu parar de reclamar".
+               </p>
+            </div>
+            
+            <button
+               onClick={() => {
+                 const baseUrl = window.location.origin;
+                 const text = `Oi amor, instalei seu novo cérebro. Clica aqui pra eu parar de reclamar: ${baseUrl}`;
+                 const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                 window.open(url, '_blank');
+               }}
+               className="shrink-0 flex items-center justify-center px-6 py-3 bg-brand-lilac/20 hover:bg-brand-lilac text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(180,159,220,0.3)]"
+            >
+               Compartilhar no Zap
+            </button>
           </div>
-          
-          <div className="space-y-4">
-            <p className="text-xs text-brand-success/60 italic font-medium">Use para testar se a IA entende as ordens enviadas pelo WhatsApp dela.</p>
-            <div className="flex space-x-2">
-              <input 
-                id="simMsg"
-                type="text" 
-                className="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-success/50 transition-colors text-sm"
-                placeholder="Ex: 'Amor, compra fralda e tira o lixo'"
-              />
+        </div>
+
+        {/* Gerador de Acesso Sarcástico */}
+        <div className="bg-gradient-to-br from-brand-card to-black p-6 rounded-3xl border border-brand-pink/20 backdrop-blur-sm space-y-6">
+          <div className="flex items-center space-x-3">
+             <Key className="w-6 h-6 text-brand-pink" />
+             <div>
+                <h3 className="font-bold text-white tracking-tight">Acesso Diplomático (Patroa)</h3>
+                <p className="text-[10px] text-brand-pink/60 uppercase font-black tracking-widest">Gere credenciais únicas para ela</p>
+             </div>
+          </div>
+
+          {!wifeAccess ? (
+            <button 
+              onClick={generateWifeAccess}
+              disabled={isGenerating}
+              className="w-full py-4 bg-brand-pink/10 border border-brand-pink/30 rounded-2xl text-brand-pink font-bold text-sm hover:bg-brand-pink/20 transition-all flex items-center justify-center gap-2"
+            >
+              {isGenerating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />}
+              Gerar Email e Senha Fictícios
+            </button>
+          ) : (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+              <div className="grid grid-cols-1 gap-2">
+                <div className="bg-black/60 p-4 rounded-xl border border-white/5 relative group">
+                  <p className="text-[9px] text-white/30 uppercase font-bold mb-1">Email Sarcástico</p>
+                  <p className="text-sm font-mono text-brand-lilac break-all">{wifeAccess.email}</p>
+                </div>
+                <div className="bg-black/60 p-4 rounded-xl border border-white/5 relative group">
+                  <p className="text-[9px] text-white/30 uppercase font-bold mb-1">Senha da Paz</p>
+                  <p className="text-sm font-mono text-brand-pink">{wifeAccess.pass}</p>
+                </div>
+              </div>
+
               <button 
                 onClick={() => {
-                   const val = (document.getElementById('simMsg') as HTMLInputElement).value;
-                   if (val && onSimulateWebhook) onSimulateWebhook(val);
+                  const baseUrl = window.location.origin;
+                  const loginUrl = `${baseUrl}?e=${encodeURIComponent(wifeAccess.email)}&p=${encodeURIComponent(wifeAccess.pass)}`;
+                  const text = `Oi amor, aqui está seu acesso ao meu cérebro novo. Clica aqui e os dados já vão estar preenchidos: ${loginUrl}\n\nEmail: ${wifeAccess.email}\nSenha: ${wifeAccess.pass}`;
+                  const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                  window.open(waUrl, '_blank');
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
                 }}
-                className="px-6 py-3 rounded-xl bg-brand-success/20 text-brand-success font-bold hover:bg-brand-success/30 transition-all active:scale-[0.98] text-sm"
+                className={`w-full py-4 rounded-2xl font-bold text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 ${copied ? 'bg-green-500 text-white' : 'bg-brand-lilac text-white shadow-[0_0_20px_rgba(180,159,220,0.4)]'}`}
               >
-                Enviar
+                {copied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? 'Compartilhado!' : 'Mandar Link Auto-Login'}
               </button>
             </div>
-          </div>
+          )}
+          <p className="text-[10px] text-white/20 italic">Isso criará uma conta vinculada que enxerga apenas o SEU painel.</p>
         </div>
 
         <div className="pt-4 flex flex-col sm:flex-row gap-4">
