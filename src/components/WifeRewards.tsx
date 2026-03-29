@@ -1,28 +1,22 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Gift, Wine, Utensils, Sparkles, LockKeyhole, Heart } from 'lucide-react';
+import { Gift, LockKeyhole, Heart, CheckCircle2, Trophy } from 'lucide-react';
 
 interface WifeRewardsProps {
   score: number;
+  rewardOptions: string[];
+  selectedReward: string | null;
+  onSelectReward: (reward: string) => void;
 }
 
-export function WifeRewards({ score }: WifeRewardsProps) {
-  const [activeReward, setActiveReward] = useState<number | null>(null);
+export function WifeRewards({ score, rewardOptions, selectedReward, onSelectReward }: WifeRewardsProps) {
+  const target = 200;
+  const isUnlocked = score >= target;
 
-  const rewards = [
-    { id: 1, title: 'Cupom iFood: Pizza e Paz', target: 200, icon: <Utensils className="w-5 h-5" />, code: 'COMPREIPAZ20' },
-    { id: 2, title: 'Noite de Vinho Caro', target: 500, icon: <Wine className="w-5 h-5" />, code: 'MEPERDOA50' },
-    { id: 3, title: 'Spa Day Completo', target: 1000, icon: <Sparkles className="w-5 h-5" />, code: 'VALEMILAGRE' },
-  ];
-
-  const highestUnlocked = Math.max(...rewards.filter(r => score >= r.target).map(r => r.target), 0);
-  const nextMilestone = rewards.find(r => r.target > score);
-
-  const handleCopy = (code: string, id: number) => {
-    navigator.clipboard.writeText(code);
-    setActiveReward(id);
-    setTimeout(() => setActiveReward(null), 2000);
-  };
+  const rewards = rewardOptions.map((title, i) => ({
+    id: i + 1,
+    title,
+    icon: i === 0 ? <Gift className="w-5 h-5" /> : i === 1 ? <Trophy className="w-5 h-5" /> : <Heart className="w-5 h-5" />
+  }));
 
   return (
     <div className="bg-gradient-to-br from-brand-lilac/5 to-transparent border border-brand-lilac/20 rounded-3xl p-6 relative overflow-hidden shadow-2xl mt-8">
@@ -32,40 +26,34 @@ export function WifeRewards({ score }: WifeRewardsProps) {
         <div>
           <h2 className="text-2xl font-black tracking-tight flex items-center bg-gradient-to-r from-brand-pink to-brand-lilac text-transparent bg-clip-text">
             <Gift className="w-6 h-6 mr-3 text-brand-pink" />
-            Recompensa Real (Para Ela)
+            Recompensa Real
           </h2>
           <p className="text-sm text-white/50 mt-2 max-w-sm">
-            Chegue ao "Score de Elite" para liberar cupons de desculpas em parceiros (Vinho, iFood, Spa). Ela decide o que quer.
+            Atingiu {target} pontos? A Patroa liberou 3 escolhas. Escolha a sua recompensa com sabedoria.
           </p>
         </div>
         
-        {nextMilestone ? (
+        {!isUnlocked ? (
           <div className="text-right">
-            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Próxima Recompensa</p>
+            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1">Status do Resgate</p>
             <div className="flex items-center gap-2">
               <span className="text-sm text-brand-warning font-black">{score.toLocaleString()}</span>
               <span className="text-white/20">/</span>
-              <span className="text-lg text-white font-black">{nextMilestone.target.toLocaleString()} pts</span>
-            </div>
-            <div className="w-full bg-white/5 h-2 mt-2 rounded-full overflow-hidden">
-              <motion.div 
-                initial={{ width: 0 }}
-                animate={{ width: `${(score / nextMilestone.target) * 100}%` }}
-                className="bg-brand-warning h-full rounded-full"
-              />
+              <span className="text-lg text-white font-black">{target.toLocaleString()} pts</span>
             </div>
           </div>
         ) : (
           <div className="text-right flex flex-col items-end">
-             <Heart className="w-8 h-8 text-brand-pink animate-pulse mb-2" />
-             <p className="text-xs font-bold text-brand-pink uppercase tracking-widest">Master Elite Atingido</p>
+             <Trophy className="w-8 h-8 text-brand-success animate-bounce mb-2" />
+             <p className="text-xs font-bold text-brand-success uppercase tracking-widest">Recompensa Liberada!</p>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
         {rewards.map((reward, i) => {
-          const isUnlocked = score >= reward.target;
+          const isSelected = selectedReward === reward.title;
+          const otherSelected = selectedReward && !isSelected;
           
           return (
             <motion.div 
@@ -73,13 +61,13 @@ export function WifeRewards({ score }: WifeRewardsProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, type: "spring" }}
-              whileHover={isUnlocked ? { scale: 1.02, y: -5 } : {}}
-              className={`relative overflow-hidden p-5 rounded-2xl border transition-all duration-300 ${
-                isUnlocked 
-                  ? reward.target === highestUnlocked 
-                    ? 'bg-gradient-to-b from-brand-pink/20 to-black/40 border-brand-pink/50 shadow-[0_0_30px_rgba(255,97,166,0.2)] cascade-glow'
-                    : 'bg-black/40 border-brand-success/30 hover:border-brand-success/50'
-                  : 'bg-black/60 border-white/5 opacity-80 grayscale-[50%]'
+              whileHover={isUnlocked && !otherSelected ? { scale: 1.02, y: -5 } : {}}
+              className={`relative overflow-hidden p-6 rounded-2xl border transition-all duration-300 ${
+                isSelected 
+                  ? 'bg-gradient-to-b from-brand-success/20 to-black/40 border-brand-success/50 shadow-[0_0_30px_rgba(52,199,89,0.2)]'
+                  : isUnlocked && !otherSelected
+                    ? 'bg-black/40 border-white/10 hover:border-brand-pink/50'
+                    : 'bg-black/60 border-white/5 opacity-80 grayscale-[50%]'
               }`}
             >
               {!isUnlocked && (
@@ -87,40 +75,64 @@ export function WifeRewards({ score }: WifeRewardsProps) {
                   <div className="flex flex-col items-center">
                     <LockKeyhole className="w-8 h-8 text-white/20 mb-2" />
                     <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">
-                      Requer {reward.target} pts
+                       {target - score} pts restantes
                     </span>
                   </div>
                 </div>
               )}
 
+              {otherSelected && (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[1px] z-20">
+                   <span className="text-[10px] font-black uppercase text-white/20 tracking-widest">Outro resgatado</span>
+                </div>
+              )}
+
               <div className={`p-3 rounded-xl mb-4 inline-block ${
-                isUnlocked ? 'bg-gradient-to-br from-brand-pink to-brand-lilac text-white shadow-lg shadow-brand-pink/20' : 'bg-white/5 text-white/40'
+                isUnlocked && !otherSelected ? 'bg-gradient-to-br from-brand-pink to-brand-lilac text-white' : 'bg-white/5 text-white/40'
               }`}>
                 {reward.icon}
               </div>
 
-              <h3 className="font-bold text-lg mb-1">{reward.title}</h3>
-              <p className="text-xs text-white/50 mb-4 line-clamp-2">
-                Libere e aplique o código na hora do checkout. 
+              <h3 className={`font-bold text-lg mb-1 ${isSelected ? 'text-brand-success' : ''}`}>{reward.title}</h3>
+              <p className="text-xs text-white/50 mb-6">
+                {isSelected ? 'Parabéns! Reivindique com ela agora.' : 'Opção definida pela Suprema Comandante.'}
               </p>
 
               <button 
-                onClick={() => handleCopy(reward.code, reward.id)}
-                disabled={!isUnlocked}
-                className={`w-full py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 ${
-                  isUnlocked 
-                    ? activeReward === reward.id 
-                      ? 'bg-brand-success text-black' 
-                      : 'bg-white/10 hover:bg-brand-pink text-white hover:shadow-[0_0_15px_rgba(255,97,166,0.5)]'
-                    : 'bg-transparent text-white/20'
+                onClick={() => onSelectReward(reward.title)}
+                disabled={!isUnlocked || (!!selectedReward && !isSelected)}
+                className={`w-full py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 ${
+                  isSelected 
+                    ? 'bg-brand-success text-black' 
+                    : isUnlocked && !otherSelected
+                      ? 'bg-white/10 hover:bg-brand-pink text-white'
+                      : 'bg-transparent text-white/20'
                 }`}
               >
-                {activeReward === reward.id ? 'Código Copiado' : isUnlocked ? 'Resgatar Código' : 'Bloqueado'}
+                {isSelected ? (
+                   <>
+                     <CheckCircle2 className="w-4 h-4" />
+                     Resgatado
+                   </>
+                ) : 'Resgatar Este'}
               </button>
             </motion.div>
           );
         })}
       </div>
+
+      {!!selectedReward && (
+        <motion.div 
+           initial={{ opacity: 0, height: 0 }}
+           animate={{ opacity: 1, height: 'auto' }}
+           className="mt-6 p-4 bg-brand-success/10 border border-brand-success/30 rounded-xl flex items-center justify-center gap-3 border-dashed"
+        >
+           <CheckCircle2 className="w-5 h-5 text-brand-success" />
+           <p className="text-sm font-bold text-brand-success">
+             RECOMPENSA ATIVADA: Cobre seu prêmio: "{selectedReward}"!
+           </p>
+        </motion.div>
+      )}
     </div>
   );
 }

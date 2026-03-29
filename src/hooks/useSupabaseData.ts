@@ -9,6 +9,9 @@ export interface AppConfig {
   wifePhone: string;
   userPhone: string;
   sarcasmLevel: number;
+  rewardOptions: string[];
+  selectedReward: string | null;
+  wifePin: string | null;
 }
 
 export interface SettingsProps {
@@ -47,6 +50,9 @@ const DEFAULT_CONFIG: AppConfig = {
   wifePhone: '',
   userPhone: '',
   sarcasmLevel: 50,
+  rewardOptions: ['Pizza e Vinho', 'Vale Noite Fora', 'Massagem Completa'],
+  selectedReward: null,
+  wifePin: null,
 };
 
 
@@ -80,6 +86,9 @@ export function useSupabaseData() {
           wifePhone: profile.wife_phone || DEFAULT_CONFIG.wifePhone,
           userPhone: profile.user_phone || DEFAULT_CONFIG.userPhone,
           sarcasmLevel: profile.sarcasm_level ?? DEFAULT_CONFIG.sarcasmLevel,
+          rewardOptions: profile.reward_options || DEFAULT_CONFIG.rewardOptions,
+          selectedReward: profile.selected_reward || null,
+          wifePin: profile.wife_pin || null,
         });
       } else {
         // Fallback: carrega do localStorage se Supabase não retornou dados
@@ -186,7 +195,10 @@ export function useSupabaseData() {
       wife_name: newConfig.wifeName,
       wife_phone: newConfig.wifePhone,
       user_phone: newConfig.userPhone,
-      sarcasm_level: newConfig.sarcasmLevel
+      sarcasm_level: newConfig.sarcasmLevel,
+      reward_options: newConfig.rewardOptions,
+      selected_reward: newConfig.selectedReward,
+      wife_pin: newConfig.wifePin
     }, { onConflict: 'id' });
     if (error) {
       console.warn('Supabase save failed, data safe in localStorage:', error.message);

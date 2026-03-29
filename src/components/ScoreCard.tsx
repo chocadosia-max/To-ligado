@@ -58,6 +58,24 @@ export function ScoreCard({ score }: ScoreProps) {
           )}
         </p>
       </div>
+
+      {score >= 200 && (
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mt-4 p-4 bg-brand-success/20 border border-brand-success/50 rounded-2xl flex items-center justify-between"
+        >
+          <div className="flex items-center">
+            <TrendingUp className="w-5 h-5 mr-3 text-brand-success" />
+            <span className="text-xs font-bold text-brand-success uppercase tracking-tighter">Prêmio Liberado! Vá resgatar.</span>
+          </div>
+          <motion.div 
+            animate={{ scale: [1, 1.1, 1] }} 
+            transition={{ repeat: Infinity }}
+            className="w-2 h-2 bg-brand-success rounded-full shadow-[0_0_10px_rgba(52,199,89,0.8)]" 
+          />
+        </motion.div>
+      )}
       
       {/* Background glow for style */}
       <div className={`absolute -bottom-10 -right-10 w-32 h-32 blur-[60px] rounded-full ${isDanger ? 'bg-brand-danger/30' : 'bg-brand-lilac/20'}`} />

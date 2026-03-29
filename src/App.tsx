@@ -15,6 +15,7 @@ import { PaiPresenteMode } from './components/PaiPresenteMode';
 import { PactModal } from './components/PactModal';
 import { WifeRewards } from './components/WifeRewards';
 import { WifeCommandCenter } from './components/WifeCommandCenter';
+import { WifePinGate } from './components/WifePinGate';
 
 type Tab = 'painel' | 'agenda' | 'ranking' | 'patroa' | 'ajustes';
 
@@ -237,7 +238,16 @@ function App() {
 
                 {/* Dashboard Rewards Integration */}
                 <div className="mt-8">
-                  <WifeRewards score={totalScore} />
+                  <WifeRewards 
+                    score={totalScore} 
+                    rewardOptions={config.rewardOptions}
+                    selectedReward={config.selectedReward}
+                    onSelectReward={(reward) => {
+                      updateConfig({ ...config, selectedReward: reward });
+                      addTimelineEvent('Recompensa', `Resgatou: ${reward}`, 'done');
+                      alert(`Resgate confirmado! Mostre isso para a patroa e reivindique seu presente: ${reward}`);
+                    }}
+                  />
                 </div>
               </div>
             )}
@@ -248,22 +258,34 @@ function App() {
 
               {activeTab === 'patroa' && (
                 <div className="mx-auto w-full">
-                  <WifeCommandCenter 
-                    totalScore={totalScore}
-                    onAddMission={(title, pts) => {
-                      addMission(title, pts);
-                      alert('Missão delegada com sucesso!');
+                  <WifePinGate 
+                    storedPin={config.wifePin}
+                    onPinSet={(pin) => {
+                      updateConfig({ ...config, wifePin: pin });
+                      alert('Senha configurada com sucesso! Não a perca ou o marido ganhará liberdade total.');
                     }}
-                    onAddAgendaItem={(title, date, dangerLevel) => {
-                      if (!date) return;
-                      const selected = new Date(date + 'T12:00:00');
-                      const day = selected.getDate().toString().padStart(2, '0');
-                      const month = selected.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
-                      const statusMap = { low: 'safe', medium: 'pendente', high: 'urgente' } as const;
-                      addAgendaItem(day, month, title, "Ordem expressa da Chefia", statusMap[dangerLevel]);
-                      alert('Campo minado plantado com sucesso!');
-                    }}
-                  />
+                  >
+                    <WifeCommandCenter 
+                      totalScore={totalScore}
+                      rewardOptions={config.rewardOptions}
+                      onUpdateRewards={(options) => {
+                        updateConfig({ ...config, rewardOptions: options });
+                      }}
+                      onAddMission={(title, pts) => {
+                        addMission(title, pts);
+                        alert('Missão delegada com sucesso!');
+                      }}
+                      onAddAgendaItem={(title, date, dangerLevel) => {
+                        if (!date) return;
+                        const selected = new Date(date + 'T12:00:00');
+                        const day = selected.getDate().toString().padStart(2, '0');
+                        const month = selected.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
+                        const statusMap = { low: 'safe', medium: 'pendente', high: 'urgente' } as const;
+                        addAgendaItem(day, month, title, "Ordem expressa da Chefia", statusMap[dangerLevel]);
+                        alert('Campo minado plantado com sucesso!');
+                      }}
+                    />
+                  </WifePinGate>
                 </div>
               )}
 

@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Bomb, Target, AlertTriangle, Send } from 'lucide-react';
+import { Flame, Bomb, Target, AlertTriangle, Send, Gift } from 'lucide-react';
 
 interface WifeCommandCenterProps {
   onAddMission: (title: string, pts: number) => void;
   onAddAgendaItem: (title: string, date: string, dangerLevel: 'low'|'medium'|'high') => void;
+  onUpdateRewards: (options: string[]) => void;
   totalScore: number;
+  rewardOptions: string[];
 }
 
-export function WifeCommandCenter({ onAddMission, onAddAgendaItem, totalScore }: WifeCommandCenterProps) {
+export function WifeCommandCenter({ onAddMission, onAddAgendaItem, onUpdateRewards, totalScore, rewardOptions }: WifeCommandCenterProps) {
   const [missionTitle, setMissionTitle] = useState('');
   const [missionPts, setMissionPts] = useState<number>(30);
   
@@ -27,6 +29,18 @@ export function WifeCommandCenter({ onAddMission, onAddAgendaItem, totalScore }:
     onAddAgendaItem(agendaTitle, agendaDate, agendaDanger);
     setAgendaTitle('');
     setAgendaDate('');
+  };
+
+  const [localRewards, setLocalRewards] = useState<string[]>(rewardOptions || ['', '', '']);
+
+  const handleUpdateReward = (index: number, value: string) => {
+    const next = [...localRewards];
+    next[index] = value;
+    setLocalRewards(next);
+  };
+
+  const saveRewards = () => {
+    onUpdateRewards(localRewards);
   };
 
   return (
@@ -167,6 +181,44 @@ export function WifeCommandCenter({ onAddMission, onAddAgendaItem, totalScore }:
         </motion.div>
 
       </div>
+
+      {/* Definir Recompensas Reais */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-gradient-to-br from-brand-lilac/10 to-transparent border border-brand-lilac/30 rounded-3xl p-8 relative overflow-hidden"
+      >
+        <div className="flex items-center space-x-3 mb-6">
+          <Gift className="w-6 h-6 text-brand-pink" />
+          <h3 className="text-xl font-bold tracking-tight">Definir Recompensas Reais</h3>
+        </div>
+        <p className="text-sm text-white/50 mb-6 max-w-lg">
+          Quando ele atingir a pontuação, ele terá que escolher UMA destas 3 opções que você definir agora. Seja criativa (ou cruel).
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {localRewards.map((opt, i) => (
+            <div key={i}>
+              <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1 block">Opção {i + 1}</label>
+              <input 
+                type="text" 
+                placeholder={`Ex: Rebeca ganhará...`}
+                value={opt}
+                onChange={e => handleUpdateReward(i, e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-pink/50 transition-colors"
+              />
+            </div>
+          ))}
+        </div>
+
+        <button 
+          onClick={saveRewards}
+          className="mt-6 px-8 py-3 bg-brand-pink hover:bg-brand-pink/80 text-white font-black rounded-xl uppercase tracking-widest text-[10px] transition-all flex items-center justify-center shadow-[0_0_20px_rgba(255,97,166,0.3)]"
+        >
+          Confirmar Opções de Presente
+        </button>
+      </motion.div>
     </div>
   );
 }
