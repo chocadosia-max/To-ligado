@@ -10,8 +10,10 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
+        id: '/',
         name: 'Tô Ligado',
         short_name: 'Tô Ligado',
         description: 'Plataforma tática de sobrevivência conjugal.',
@@ -19,6 +21,8 @@ export default defineConfig({
         background_color: '#0a0500',
         display: 'standalone',
         orientation: 'portrait',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'pwa-192x192.png',
