@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Gift, LockKeyhole, Heart, CheckCircle2, Trophy } from 'lucide-react';
+import { Gift, Lock, Heart, CheckCircle2, Trophy } from 'lucide-react';
 
 interface WifeRewardsProps {
   score: number;
@@ -12,7 +12,7 @@ export function WifeRewards({ score, rewardOptions, selectedReward, onSelectRewa
   const target = 200;
   const isUnlocked = score >= target;
 
-  const rewards = rewardOptions.map((title, i) => ({
+  const rewards = (rewardOptions || []).map((title, i) => ({
     id: i + 1,
     title,
     icon: i === 0 ? <Gift className="w-5 h-5" /> : i === 1 ? <Trophy className="w-5 h-5" /> : <Heart className="w-5 h-5" />
@@ -73,7 +73,7 @@ export function WifeRewards({ score, rewardOptions, selectedReward, onSelectRewa
               {!isUnlocked && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[2px] z-20">
                   <div className="flex flex-col items-center">
-                    <LockKeyhole className="w-8 h-8 text-white/20 mb-2" />
+                    <Lock className="w-8 h-8 text-white/20 mb-2" />
                     <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">
                        {target - score} pts restantes
                     </span>

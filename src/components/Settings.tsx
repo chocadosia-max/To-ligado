@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Heart, Zap, Save, RefreshCw, Share2, Key, Copy, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { User, Heart, Zap, Save, RefreshCw, Share2, Key, Copy, CheckCircle2, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { createClient } from '@supabase/supabase-js';
 
@@ -226,7 +226,7 @@ export function SettingsComponent({ config, onSave, onReset }: SettingsProps) {
               disabled={isGenerating}
               className="w-full py-4 bg-brand-pink/10 border border-brand-pink/30 rounded-2xl text-brand-pink font-bold text-sm hover:bg-brand-pink/20 transition-all flex items-center justify-center gap-2"
             >
-              {isGenerating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />}
+              {isGenerating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
               Gerar Email e Senha Fictícios
             </button>
           ) : (

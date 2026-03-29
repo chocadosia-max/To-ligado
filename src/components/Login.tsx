@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { Mail, ArrowRight, ShieldAlert, UserPlus, LogIn, Lock, RefreshCw } from 'lucide-react';
+import { Mail, ArrowRight, Shield, UserPlus, LogIn, Lock, RefreshCw } from 'lucide-react';
 
 type Mode = 'login' | 'signup';
 
@@ -74,7 +74,7 @@ export function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-lilac/30 to-brand-pink/30 border border-brand-lilac/40 mb-6 shadow-[0_0_30px_rgba(180,159,220,0.2)]">
-            <ShieldAlert className="w-8 h-8 text-brand-lilac" />
+            <Shield className="w-8 h-8 text-brand-lilac" />
           </div>
           <h1 className="text-4xl font-black tracking-tighter bg-gradient-to-br from-brand-lilac to-brand-pink text-transparent bg-clip-text mb-2">
             Tô Ligado

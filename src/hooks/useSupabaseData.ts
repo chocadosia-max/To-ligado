@@ -80,23 +80,27 @@ export function useSupabaseData() {
       const { data: agendaRes } = await supabase.from('agenda').select('*').eq('user_id', activeTargetId).order('created_at', { ascending: true });
 
       if (profile) {
-        setConfig({
+        const merged = {
           userName: profile.user_name || user.user_metadata?.full_name || DEFAULT_CONFIG.userName,
           wifeName: profile.wife_name || DEFAULT_CONFIG.wifeName,
           wifePhone: profile.wife_phone || DEFAULT_CONFIG.wifePhone,
           userPhone: profile.user_phone || DEFAULT_CONFIG.userPhone,
           sarcasmLevel: profile.sarcasm_level ?? DEFAULT_CONFIG.sarcasmLevel,
-          rewardOptions: profile.reward_options || DEFAULT_CONFIG.rewardOptions,
+          rewardOptions: Array.isArray(profile.reward_options) ? profile.reward_options : DEFAULT_CONFIG.rewardOptions,
           selectedReward: profile.selected_reward || null,
           wifePin: profile.wife_pin || null,
-        });
+        };
+        setConfig(prev => ({ ...prev, ...merged }));
       } else {
-        // Fallback: carrega do localStorage se Supabase não retornou dados
+        // Fallback: carrega do localStorage
         const saved = localStorage.getItem('tl_config');
         if (saved) {
           try {
-            setConfig(JSON.parse(saved));
-          } catch { /* ignora parse error */ }
+            const parsed = JSON.parse(saved);
+            if (parsed && typeof parsed === 'object') {
+              setConfig(prev => ({ ...prev, ...parsed }));
+            }
+          } catch (e) { console.error("Erro ao ler config local:", e); }
         }
       }
 

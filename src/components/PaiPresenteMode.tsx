@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Baby, HeartPulse, MessagesSquare, Check } from 'lucide-react';
+import { Shield, Baby, HeartPulse, MessagesSquare, Check } from 'lucide-react';
 
 interface PaiPresenteProps {
   sarcasmLevel: number;
@@ -13,7 +13,7 @@ export function PaiPresenteMode({ sarcasmLevel, onAction }: PaiPresenteProps) {
 
   const quickActions = [
     { id: 1, label: 'Elogiar paciência', icon: <HeartPulse className="w-4 h-4 text-brand-pink" />, msg: 'Amor, vi o quanto você foi paciente hoje. Você é incrivel, descansa um pouco.' },
-    { id: 2, label: 'Assumir B.O.', icon: <ShieldAlert className="w-4 h-4 text-brand-lilac" />, msg: 'Deixa que eu resolvo a lição de casa hoje, vai tomar um vinho.' },
+    { id: 2, label: 'Assumir B.O.', icon: <Shield className="w-4 h-4 text-brand-lilac" />, msg: 'Deixa que eu resolvo a lição de casa hoje, vai tomar um vinho.' },
     { id: 3, label: 'Pergunta Isenta', icon: <MessagesSquare className="w-4 h-4 text-brand-success" />, msg: 'Criança já comeu ou eu peço algo pra gente agora?' }
   ];
 

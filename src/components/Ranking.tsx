@@ -12,10 +12,10 @@ export function Ranking({ config, totalScore }: RankingProps) {
   const ranking = [
     { 
       id: 'rob', name: 'Roberto (O Perfeito)', score: 1240, status: 'up', 
-      title: `Marido Ideal da amiga da ${config.wifeName}`, icon: <Flame className="w-5 h-5 text-amber-500" />
+      title: `Marido Ideal da amiga da ${config?.wifeName || 'Patroa'}`, icon: <Flame className="w-5 h-5 text-amber-500" />
     },
     { 
-      id: 'me', name: config.userName, score: totalScore, status: totalScore > 100 ? 'up' : 'down', 
+      id: 'me', name: config?.userName || 'Você', score: totalScore, status: totalScore > 100 ? 'up' : 'down', 
       title: totalScore > 1000 ? 'Quase um Roberto' : totalScore > 300 ? 'Sobrevivente' : 'Em Apuros Graves', 
       isMe: true 
     },
@@ -85,7 +85,7 @@ export function Ranking({ config, totalScore }: RankingProps) {
                 : myPos?.rank === 2
                 ? 'Quase lá. Só falta parar de respirar alto quando ela dorme.'
                 : myPos?.rank === sortedRanking.length
-                ? `Fim de jogo. ${config.wifeName} já está baixando o Tinder.`
+                ? `Fim de jogo. ${config?.wifeName || 'Ela'} já está baixando o Tinder.`
                 : 'Você não fede nem cheira. A mediocridade é sua melhor defesa.'}
             </p>
           </div>

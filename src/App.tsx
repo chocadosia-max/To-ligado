@@ -8,7 +8,7 @@ import { Agenda } from './components/Agenda';
 import { Ranking } from './components/Ranking';
 import { SettingsComponent } from './components/Settings';
 import { useSupabaseData } from './hooks/useSupabaseData';
-import { Settings, ShieldAlert, Home, Calendar, UserRound, LogOut } from 'lucide-react';
+import { Settings, Shield, Home, Calendar, UserRound, LogOut } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
 import { PaiPresenteMode } from './components/PaiPresenteMode';
@@ -66,14 +66,6 @@ function App() {
     }
   };
 
-  if (authLoading || loadingDb) {
-    return (
-      <div className="min-h-screen bg-brand-dark flex flex-col items-center justify-center">
-        <ShieldAlert className="w-12 h-12 text-brand-lilac animate-pulse mb-4" />
-        <p className="text-white/50 text-sm tracking-widest uppercase font-bold">Conectando ao QG Central / Sincronizando Dados...</p>
-      </div>
-    );
-  }
 
   if (!session) {
     return <Login />;
@@ -119,7 +111,7 @@ function App() {
           onClick={() => setActiveTab('patroa')}
           className={`flex flex-col items-center lg:flex-row lg:justify-start lg:w-full lg:px-4 space-y-1 lg:space-y-0 lg:space-x-3 transition-colors p-2 rounded-xl text-red-500 hover:bg-red-500/10 ${activeTab === 'patroa' ? 'bg-red-500/20 shadow-[0_0_15px_rgba(220,38,38,0.3)]' : ''}`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 lg:w-5 lg:h-5 mb-[1px] lg:mb-0"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="m8 17 4 4 4-4"></path></svg>
+          <Shield className="w-6 h-6 lg:w-5 lg:h-5 mb-[1px] lg:mb-0" />
           <span className="text-[10px] lg:text-sm font-bold">A Chefe</span>
         </button>
         
@@ -175,8 +167,8 @@ function App() {
         {/* Desktop Title & Context Bar */}
         <div className="hidden md:flex px-8 pt-10 pb-6 justify-between items-center z-40">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">E aí, {config.userName}? 👋</h2>
-            <p className="text-sm text-white/50 mt-1">Status atual com {config.wifeName}: <span className="text-brand-lilac font-bold uppercase">{totalScore > 50 ? 'Milagre' : 'Sendo Vigiado'}</span></p>
+            <h2 className="text-2xl font-bold tracking-tight">E aí, {config?.userName || 'Soldado'}? 👋</h2>
+            <p className="text-sm text-white/50 mt-1">Status atual com {config?.wifeName || 'Comandante'}: <span className="text-brand-lilac font-bold uppercase">{totalScore > 50 ? 'Milagre' : 'Sendo Vigiado'}</span></p>
           </div>
           {activeTab === 'painel' && (
             <div className="px-4 py-2 bg-brand-dark/50 border border-brand-lilac/20 rounded-xl">

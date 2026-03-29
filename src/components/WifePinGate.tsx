@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Unlock, Fingerprint, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Shield, Lock, AlertTriangle } from 'lucide-react';
 
 interface WifePinGateProps {
   storedPin: string | null;
@@ -12,11 +12,12 @@ export function WifePinGate({ storedPin, onPinSet, children }: WifePinGateProps)
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
-  const [isSettingMode, setIsSettingMode] = useState(!storedPin);
+  const pinData = typeof storedPin === 'string' ? storedPin : '';
+  const [isSettingMode, setIsSettingMode] = useState(!pinData);
 
   useEffect(() => {
-    setIsSettingMode(!storedPin);
-  }, [storedPin]);
+    setIsSettingMode(!pinData);
+  }, [pinData]);
 
   const handleCharClick = (char: string) => {
     if (pin.length < 4) {
@@ -57,16 +58,17 @@ export function WifePinGate({ storedPin, onPinSet, children }: WifePinGateProps)
         animate={{ y: 0, opacity: 1 }}
         className="text-center relative z-10 w-full"
       >
-        <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center border border-red-500/50 shadow-[0_0_20px_rgba(220,38,38,0.3)] mx-auto mb-6">
-          {isSettingMode ? <Fingerprint className="w-8 h-8 text-red-500" /> : <ShieldAlert className="w-8 h-8 text-red-500" />}
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-16 h-16 bg-red-500/10 rounded-3xl flex items-center justify-center border border-red-500/20 mb-4 shadow-[0_0_20px_rgba(220,38,38,0.2)]">
+            {isSettingMode ? <Lock className="w-8 h-8 text-red-500" /> : <Shield className="w-8 h-8 text-red-500" />}
+          </div>
+          <h2 className="text-2xl font-black uppercase tracking-tighter text-white">
+            {isSettingMode ? 'Configurar Pin de Acesso' : 'Área Restrita (Patroa)'}
+          </h2>
+          <p className="text-[10px] text-red-400 font-bold uppercase tracking-[0.2em] mt-2">
+            {isSettingMode ? 'Escolha 4 dígitos para segurança extrema' : 'Acesso Biométrico ou Pin Necessário'}
+          </p>
         </div>
-
-        <h2 className="text-2xl font-black text-white tracking-tight uppercase mb-2">
-          {isSettingMode ? 'Configurar Acesso' : 'Área Restrita'}
-        </h2>
-        <p className="text-sm text-red-400 font-bold tracking-widest uppercase mb-8">
-          {isSettingMode ? 'Escolha sua senha de 4 dígitos' : 'Somente para a Patroa'}
-        </p>
 
         {/* PIN Display */}
         <div className="flex justify-center gap-4 mb-8">
@@ -75,33 +77,28 @@ export function WifePinGate({ storedPin, onPinSet, children }: WifePinGateProps)
               key={i} 
               className={`w-12 h-16 border-2 rounded-2xl flex items-center justify-center text-2xl font-black transition-all ${
                 error 
-                  ? 'border-red-500 bg-red-500/20 shadow-[0_0_15px_rgba(220,38,38,0.5)]' 
-                  : pin[i] 
+                  ? 'border-red-500 bg-red-500/20' 
+                  : (pin && pin[i]) 
                     ? 'border-red-500 bg-red-500/10 text-white' 
                     : 'border-white/10 bg-white/5'
               }`}
             >
-              <AnimatePresence mode="wait">
-                {pin[i] ? (
-                  <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="w-3 h-3 bg-white rounded-full"
-                  />
-                ) : null}
-              </AnimatePresence>
+              {(pin && pin[i]) ? (
+                <div className="w-3 h-3 bg-white rounded-full" />
+              ) : null}
             </div>
           ))}
         </div>
 
         {error && (
-          <motion.p 
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="text-xs text-red-500 font-black uppercase tracking-widest mb-4 flex items-center justify-center gap-2"
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3"
           >
-            <AlertCircle className="w-4 h-4" /> Senha Incorreta
-          </motion.p>
+            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+            <p className="text-xs font-bold text-red-400">Senha incorreta. O marido foi notificado da tentativa de invasão (mentira, mas quase).</p>
+          </motion.div>
         )}
 
         {/* Numpad */}
@@ -136,7 +133,7 @@ export function WifePinGate({ storedPin, onPinSet, children }: WifePinGateProps)
                  : 'bg-white/5 text-white/20'
              }`}
           >
-            <Unlock className="w-5 h-5" />
+            <Shield className="w-5 h-5" />
           </button>
         </div>
 
