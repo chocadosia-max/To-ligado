@@ -84,15 +84,15 @@ export function Missions({ missions, onToggle, onAdd, onDelete }: MissionsProps)
       </AnimatePresence>
 
       <div className="space-y-2">
-        {missions.map((mission) => (
+        <AnimatePresence>
+        {missions.filter(m => !m.completed).map((mission) => (
           <motion.div 
             key={mission.id}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, scale: 0.9, height: 0, overflow: 'hidden' }}
             whileHover={{ scale: 1.01 }}
-            className={`flex items-center p-3 rounded-xl border transition-colors group ${
-              mission.completed 
-                ? 'bg-brand-success/10 border-brand-success/20' 
-                : 'bg-brand-card border-white/5 hover:border-brand-lilac/30'
-            }`}
+            className={`flex items-center p-3 rounded-xl border transition-colors group bg-brand-card border-white/5 hover:border-brand-lilac/30`}
           >
             <div className="mr-3 cursor-pointer" onClick={() => onToggle(mission.id)}>
               {mission.completed ? (
@@ -123,6 +123,7 @@ export function Missions({ missions, onToggle, onAdd, onDelete }: MissionsProps)
             </div>
           </motion.div>
         ))}
+        </AnimatePresence>
       </div>
     </div>
   );

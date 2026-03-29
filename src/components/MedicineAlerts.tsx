@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pill, Plus, Check, X, BellRing } from 'lucide-react';
+import { Pill, Plus, X, BellRing, Check } from 'lucide-react';
 
 interface MedicineProps {
   lastTime?: string;
@@ -21,6 +21,7 @@ export function MedicineAlerts({ onCheck }: MedicineProps) {
   const [newChild, setNewChild] = useState('');
   const [newMed, setNewMed] = useState('');
   const [newTime, setNewTime] = useState('');
+  const [schedulingId, setSchedulingId] = useState<string | null>(null);
   
   // Load local data
   useEffect(() => {
@@ -60,36 +61,57 @@ export function MedicineAlerts({ onCheck }: MedicineProps) {
     saveToLocal(alerts.filter(a => a.id !== id));
   };
 
-  const handleGive = (id: string) => {
+  const handleGive = (id: string, hoursToAdd: number) => {
     const now = new Date();
-    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    // Atualiza para a nova data
+    now.setHours(now.getHours() + hoursToAdd);
+    const newTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     
-    // Update local state and trigger global app check
-    saveToLocal(alerts.map(a => a.id === id ? { ...a, lastGiven: timeStr } : a));
-    onCheck(); // This triggers Supabase timeline/lastMed updates in parent
+    // Atualiza na lista com o novo horário alvo!
+    saveToLocal(alerts.map(a => a.id === id ? { ...a, time: newTime } : a));
+    setSchedulingId(null);
+    onCheck(); // Trigger Supabase timeline events (se configurado no App gerará um check)
   };
+
+  // 1. Order by time
+  const sortedAlerts = [...alerts].sort((a, b) => a.time.localeCompare(b.time));
+
+  // 2. Group by period
+  const grouped = sortedAlerts.reduce((acc, curr) => {
+    const h = parseInt(curr.time.split(':')[0]);
+    let period = 'Madrugada/Noite';
+    if (h >= 6 && h < 12) period = 'Manhã';
+    else if (h >= 12 && h < 18) period = 'Tarde';
+    
+    if (!acc[period]) acc[period] = [];
+    acc[period].push(curr);
+    return acc;
+  }, {} as Record<string, MedItem[]>);
+
+  const periods = ['Manhã', 'Tarde', 'Madrugada/Noite'];
 
   return (
     <motion.div 
       layout
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="h-full flex flex-col justify-between p-4 rounded-3xl bg-gradient-to-br from-brand-warning/10 to-brand-card/50 border border-brand-warning/20 shadow-lg relative overflow-hidden"
+      className="h-full flex flex-col p-4 rounded-3xl bg-[#0a0500] border border-brand-warning/20 shadow-lg relative overflow-hidden"
     >
-      <div className="absolute top-0 right-0 w-64 h-64 bg-brand-warning/10 rounded-full blur-[80px] pointer-events-none mix-blend-screen opacity-50" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-brand-warning/5 rounded-full blur-[80px] pointer-events-none mix-blend-screen opacity-50" />
 
-      <div className="flex items-center justify-between mb-6 relative z-10 w-full">
-        <h3 className="text-lg font-black tracking-tight text-white flex items-center">
-            <Pill className="w-5 h-5 mr-2 text-brand-warning" />
-            Enfermaria
+      {/* Cabeçalho Horizontalmente Alinhado */}
+      <div className="flex items-center justify-between mb-6 relative z-10 w-full shrink-0">
+        <h3 className="text-xl font-black tracking-tight text-white flex items-center">
+            <Pill className="w-6 h-6 mr-2 text-brand-warning" />
+            Medicamentos
         </h3>
         <div className="flex space-x-2">
-          <span className="text-[10px] font-black px-2 py-1 bg-brand-warning/20 text-brand-warning rounded-lg uppercase tracking-widest flex items-center shadow-[0_0_10px_rgba(255,149,0,0.3)]">
+          <span className="hidden md:flex text-[10px] font-black px-3 py-1.5 bg-brand-warning/10 text-brand-warning rounded-lg uppercase tracking-widest items-center border border-brand-warning/20">
             <BellRing className="w-3 h-3 mr-1" />
             Não Esquecer
           </span>
           <button 
             onClick={() => setIsAdding(!isAdding)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white/60 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 text-white/60 transition-colors"
           >
             {isAdding ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
           </button>
@@ -102,32 +124,32 @@ export function MedicineAlerts({ onCheck }: MedicineProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden mb-4 relative z-10"
+            className="overflow-hidden mb-6 relative z-10 shrink-0"
           >
-            <div className="p-4 rounded-2xl bg-black/40 border border-brand-warning/20 space-y-3 backdrop-blur-md">
+            <div className="p-4 rounded-2xl bg-[#140a00] border border-brand-warning/30 space-y-3">
               <input 
                 type="text" 
                 placeholder="Paciente (Ex: Filho)" 
                 value={newChild} onChange={e => setNewChild(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-warning/50"
               />
               <input 
                 type="text" 
                 placeholder="Medicamento e Dose" 
                 value={newMed} onChange={e => setNewMed(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-warning/50"
               />
               <div className="flex space-x-2">
                 <input 
                   type="time" 
                   value={newTime} onChange={e => setNewTime(e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase"
+                  className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase focus:outline-none focus:border-brand-warning/50"
                   style={{ colorScheme: 'dark' }}
                 />
                 <button 
                   onClick={handleAdd}
                   disabled={!newMed || !newChild || !newTime}
-                  className="px-4 bg-brand-warning text-black font-bold text-xs rounded-xl disabled:opacity-50"
+                  className="px-6 bg-brand-warning text-black font-black uppercase tracking-widest text-[10px] rounded-xl disabled:opacity-50"
                 >
                   Salvar
                 </button>
@@ -137,58 +159,96 @@ export function MedicineAlerts({ onCheck }: MedicineProps) {
         )}
       </AnimatePresence>
 
-      <div className="space-y-3 flex-1 relative z-10">
+      <div className="flex-1 overflow-y-auto pr-1 relative z-10 space-y-5 custom-scrollbar">
         {alerts.length === 0 && (
-          <p className="text-center text-xs text-white/30 uppercase mt-8 font-bold tracking-widest">Nenhuma medicação ativa</p>
+          <p className="text-center text-xs text-brand-warning/40 uppercase mt-8 font-bold tracking-widest flex flex-col items-center">
+             Nenhuma medicação ativa
+          </p>
         )}
-        {alerts.map((alert, i) => {
-          const isDone = !!alert.lastGiven;
+        
+        {periods.map(period => {
+          const items = grouped[period];
+          if (!items || items.length === 0) return null;
+          
           return (
-            <motion.div 
-              key={alert.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1, type: "spring" }}
-              className={`group flex items-center p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden backdrop-blur-sm ${
-                isDone 
-                  ? 'bg-brand-success/10 border-brand-success/30' 
-                  : 'bg-black/40 border-brand-warning/30 hover:shadow-[0_4px_20px_rgba(255,149,0,0.15)] hover:-translate-y-1'
-              }`}
-            >
-              {isDone && <div className="absolute inset-0 bg-brand-success/5 pointer-events-none" />}
-
-              <div className={`p-2.5 rounded-xl mr-3 shrink-0 transition-colors ${
-                isDone ? 'bg-brand-success/20 text-brand-success shadow-[0_0_15px_rgba(0,255,100,0.4)]' : 'bg-brand-warning/20 text-brand-warning shadow-inner'
-              }`}>
-                {isDone ? <Check className="w-5 h-5" /> : <Pill className="w-5 h-5" />}
-              </div>
+            <div key={period} className="space-y-3">
+              <h4 className="text-[10px] font-black text-brand-warning/60 uppercase tracking-widest flex items-center">
+                {period === 'Manhã' ? '🌅' : period === 'Tarde' ? '☀️' : '🌙'} {period}
+                <div className="flex-1 h-px bg-brand-warning/10 ml-3" />
+              </h4>
               
-              <div className="flex-1 min-w-0 pr-2">
-                <h4 className={`font-bold text-sm truncate ${isDone ? 'text-white/60 line-through' : 'text-white'}`}>{alert.child}</h4>
-                <p className={`text-[11px] font-medium truncate ${isDone ? 'text-brand-success/80' : 'text-brand-warning'}`}>{alert.medicine}</p>
-                <div className="flex text-[10px] items-center space-x-2 mt-1">
-                   <span className="text-white/30">Alvo: {alert.time}</span>
-                   {isDone && <span className="text-brand-success font-bold">Dado: {alert.lastGiven}</span>}
-                </div>
-              </div>
-
-              <div className="flex flex-col items-end shrink-0 gap-2">
-                {!isDone && (
-                  <button 
-                    onClick={() => handleGive(alert.id)}
-                    className="text-[10px] px-3 py-1.5 bg-brand-warning hover:bg-amber-400 text-black font-black tracking-widest uppercase rounded-lg transition-all hover:scale-105 active:scale-95 shadow-[0_0_15px_rgba(255,149,0,0.4)]"
-                  >
-                    Dar Agora
-                  </button>
-                )}
-                <button 
-                  onClick={() => handleDelete(alert.id)}
-                  className={`text-[10px] uppercase font-bold tracking-widest transition-colors ${isDone ? 'text-white/20 hover:text-brand-danger' : 'opacity-0 group-hover:opacity-100 text-white/20 hover:text-brand-danger'}`}
+              <AnimatePresence>
+              {items.map((alert) => (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, height: 0, marginBottom: 0 }}
+                  key={alert.id}
+                  className="group flex flex-col md:flex-row md:items-center p-3 sm:p-4 rounded-2xl bg-[#120800] border border-amber-900/40 hover:border-brand-warning/50 transition-all duration-300 relative overflow-hidden"
                 >
-                  Remover
-                </button>
-              </div>
-            </motion.div>
+                  <div className="flex items-center flex-1 min-w-0 mb-3 md:mb-0">
+                    <div className="w-12 h-12 rounded-xl bg-[#2a1400] border border-amber-900/50 flex items-center justify-center shrink-0 mr-4 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                      <Pill className="w-6 h-6 text-brand-warning" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 pr-2">
+                       <h4 className="font-black text-base md:text-lg text-white truncate tracking-tight">{alert.child}</h4>
+                       <p className="text-xs md:text-sm font-bold text-brand-warning truncate mt-0.5">{alert.medicine}</p>
+                       <div className="flex text-[10px] items-center space-x-2 mt-1">
+                         <span className="text-white/40 flex items-center font-medium">
+                           Alvo: {alert.time}
+                         </span>
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between md:flex-col md:items-end md:justify-center shrink-0 ml-0 md:ml-4 gap-2">
+                    {schedulingId === alert.id ? (
+                      <div className="flex flex-col gap-2 w-full md:w-auto p-2 bg-[#0a0500] rounded-xl border border-brand-warning/20">
+                        <span className="text-[9px] text-white/50 uppercase tracking-widest font-bold text-center md:text-right">Próxima dose em:</span>
+                        <div className="flex gap-1 justify-center md:justify-end">
+                           {[6, 8, 12].map(h => (
+                             <button 
+                               key={h}
+                               onClick={() => handleGive(alert.id, h)}
+                               className="px-3 py-1.5 bg-brand-warning/10 hover:bg-brand-warning text-brand-warning hover:text-black font-black text-[10px] rounded-lg transition-colors border border-brand-warning/20 hover:border-brand-warning"
+                             >
+                               +{h}h
+                             </button>
+                           ))}
+                           <button 
+                             onClick={() => { handleDelete(alert.id); onCheck(); }}
+                             className="px-2 py-1 bg-brand-success/10 hover:bg-brand-success/30 text-brand-success rounded-lg border border-brand-success/20 transition-colors"
+                             title="Tratamento Finalizado"
+                           >
+                              <Check className="w-3 h-3" />
+                           </button>
+                           <button onClick={() => setSchedulingId(null)} className="px-2 py-1.5 bg-white/5 hover:bg-white/10 text-white/50 rounded-lg ml-1">
+                             <X className="w-3 h-3" />
+                           </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center w-full md:w-auto justify-between md:justify-end gap-3">
+                        <button 
+                          onClick={() => handleDelete(alert.id)}
+                          className="text-[10px] uppercase font-bold tracking-widest transition-colors opacity-100 md:opacity-0 group-hover:opacity-100 text-white/20 hover:text-brand-danger hidden md:block"
+                        >
+                          Apagar
+                        </button>
+                        <button 
+                          onClick={() => setSchedulingId(alert.id)}
+                          className="flex-1 md:flex-none text-[11px] px-6 py-3 bg-brand-warning hover:bg-amber-400 text-black font-black tracking-widest uppercase rounded-xl transition-all shadow-[0_0_15px_rgba(255,149,0,0.2)] hover:shadow-[0_0_25px_rgba(255,149,0,0.4)]"
+                        >
+                          Dar Agora
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+              </AnimatePresence>
+            </div>
           );
         })}
       </div>
