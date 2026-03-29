@@ -99,9 +99,9 @@ export function MedicineAlerts({ onCheck }: MedicineProps) {
       <div className="absolute top-0 right-0 w-64 h-64 bg-brand-warning/5 rounded-full blur-[80px] pointer-events-none mix-blend-screen opacity-50" />
 
       {/* Cabeçalho Horizontalmente Alinhado */}
-      <div className="flex items-center justify-between mb-6 relative z-10 w-full shrink-0">
-        <h3 className="text-xl font-black tracking-tight text-white flex items-center">
-            <Pill className="w-6 h-6 mr-2 text-brand-warning" />
+      <div className="flex items-center justify-between mb-3 relative z-10 w-full shrink-0">
+        <h3 className="text-lg font-black tracking-tight text-white flex items-center">
+            <Pill className="w-5 h-5 mr-2 text-brand-warning" />
             Medicamentos
         </h3>
         <div className="flex space-x-2">
@@ -124,9 +124,9 @@ export function MedicineAlerts({ onCheck }: MedicineProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden mb-6 relative z-10 shrink-0"
+            className="overflow-hidden mb-3 relative z-10 shrink-0"
           >
-            <div className="p-4 rounded-2xl bg-[#140a00] border border-brand-warning/30 space-y-3">
+            <div className="p-3 rounded-2xl bg-[#140a00] border border-brand-warning/30 space-y-2">
               <input 
                 type="text" 
                 placeholder="Paciente (Ex: Filho)" 
@@ -159,9 +159,9 @@ export function MedicineAlerts({ onCheck }: MedicineProps) {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 overflow-y-auto pr-1 relative z-10 space-y-5 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto pr-1 relative z-10 space-y-3 custom-scrollbar">
         {alerts.length === 0 && (
-          <p className="text-center text-xs text-brand-warning/40 uppercase mt-8 font-bold tracking-widest flex flex-col items-center">
+          <p className="text-center text-xs text-brand-warning/40 uppercase mt-4 font-bold tracking-widest flex flex-col items-center">
              Nenhuma medicação ativa
           </p>
         )}
@@ -184,17 +184,17 @@ export function MedicineAlerts({ onCheck }: MedicineProps) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, height: 0, marginBottom: 0 }}
                   key={alert.id}
-                  className="group flex flex-col md:flex-row md:items-center p-3 sm:p-4 rounded-2xl bg-[#120800] border border-amber-900/40 hover:border-brand-warning/50 transition-all duration-300 relative overflow-hidden"
+                  className="group flex flex-col md:flex-row md:items-center p-2 sm:p-3 rounded-xl bg-[#120800] border border-amber-900/40 hover:border-brand-warning/50 transition-all duration-300 relative overflow-hidden"
                 >
-                  <div className="flex items-center flex-1 min-w-0 mb-3 md:mb-0">
-                    <div className="w-12 h-12 rounded-xl bg-[#2a1400] border border-amber-900/50 flex items-center justify-center shrink-0 mr-4 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
-                      <Pill className="w-6 h-6 text-brand-warning" />
+                  <div className="flex items-center flex-1 min-w-0 mb-2 md:mb-0">
+                    <div className="w-10 h-10 rounded-lg bg-[#2a1400] border border-amber-900/50 flex items-center justify-center shrink-0 mr-3 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                      <Pill className="w-5 h-5 text-brand-warning" />
                     </div>
                     
                     <div className="flex-1 min-w-0 pr-2">
-                       <h4 className="font-black text-base md:text-lg text-white truncate tracking-tight">{alert.child}</h4>
-                       <p className="text-xs md:text-sm font-bold text-brand-warning truncate mt-0.5">{alert.medicine}</p>
-                       <div className="flex text-[10px] items-center space-x-2 mt-1">
+                       <h4 className="font-black text-sm md:text-base text-white truncate tracking-tight">{alert.child}</h4>
+                       <p className="text-[11px] md:text-xs font-bold text-brand-warning truncate mt-0.5">{alert.medicine}</p>
+                       <div className="flex text-[10px] items-center space-x-2 mt-0.5">
                          <span className="text-white/40 flex items-center font-medium">
                            Alvo: {alert.time}
                          </span>
@@ -238,7 +238,7 @@ export function MedicineAlerts({ onCheck }: MedicineProps) {
                         </button>
                         <button 
                           onClick={() => setSchedulingId(alert.id)}
-                          className="flex-1 md:flex-none text-[11px] px-6 py-3 bg-brand-warning hover:bg-amber-400 text-black font-black tracking-widest uppercase rounded-xl transition-all shadow-[0_0_15px_rgba(255,149,0,0.2)] hover:shadow-[0_0_25px_rgba(255,149,0,0.4)]"
+                          className="flex-1 md:flex-none text-[10px] px-4 py-2 bg-brand-warning hover:bg-amber-400 text-black font-black tracking-widest uppercase rounded-lg transition-all shadow-[0_0_15px_rgba(255,149,0,0.2)] hover:shadow-[0_0_25px_rgba(255,149,0,0.4)]"
                         >
                           Dar Agora
                         </button>
