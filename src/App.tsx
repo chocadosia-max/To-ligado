@@ -17,8 +17,10 @@ import { WifeRewards } from './components/WifeRewards';
 import { WifeCommandCenter } from './components/WifeCommandCenter';
 import { WifePinGate } from './components/WifePinGate';
 import { InstallAppButton } from './components/InstallPWA';
+import { SOS } from './components/SOS';
+import { Ambulance } from 'lucide-react';
 
-type Tab = 'painel' | 'agenda' | 'ranking' | 'patroa' | 'ajustes';
+type Tab = 'painel' | 'agenda' | 'ranking' | 'patroa' | 'sos' | 'ajustes';
 
 
 
@@ -115,6 +117,14 @@ function App() {
           <span className="text-[10px] lg:text-sm font-bold">A Chefe</span>
         </button>
 
+        <button 
+          onClick={() => setActiveTab('sos')}
+          className={`flex flex-col items-center lg:flex-row lg:justify-start lg:w-full lg:px-4 space-y-1 lg:space-y-0 lg:space-x-3 transition-colors p-2 rounded-xl text-brand-lilac hover:bg-brand-lilac/10 ${activeTab === 'sos' ? 'bg-brand-lilac/20 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : ''}`}
+        >
+          <Ambulance className="w-6 h-6 lg:w-5 lg:h-5 mb-[1px] lg:mb-0" />
+          <span className="text-[10px] lg:text-sm font-bold">SOS IA</span>
+        </button>
+
         <InstallAppButton />
         
         <div className="hidden md:block flex-1" />
@@ -152,6 +162,12 @@ function App() {
           </div>
           <div className="flex space-x-2">
             <InstallAppButton compact />
+            <button 
+              onClick={() => setActiveTab('sos')}
+              className={`p-2 rounded-full transition-colors pointer-events-auto ${activeTab === 'sos' ? 'bg-brand-lilac/20 text-brand-lilac' : 'bg-white/5 text-white/70 hover:bg-white/10'}`}
+            >
+              <Ambulance className="w-5 h-5" />
+            </button>
             <button 
               onClick={() => setActiveTab('ajustes')}
               className={`p-2 rounded-full transition-colors pointer-events-auto ${activeTab === 'ajustes' ? 'bg-brand-lilac/20' : 'bg-white/5 hover:bg-white/10'}`}
@@ -290,6 +306,10 @@ function App() {
                   onSave={updateConfig} 
                   onReset={resetAll} 
                 />
+              )}
+
+              {activeTab === 'sos' && (
+                <div className="max-w-2xl mx-auto"><SOS /></div>
               )}
             </motion.div>
           </AnimatePresence>
