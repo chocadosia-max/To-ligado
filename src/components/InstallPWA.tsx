@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Download, Share } from 'lucide-react';
 
-export function InstallAppButton() {
+export function InstallAppButton({ compact = false }: { compact?: boolean }) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isIOS, setIsIOS] = useState(false);
 
@@ -26,7 +26,7 @@ export function InstallAppButton() {
     }
 
     if (!deferredPrompt) {
-       alert("No seu celular (Android): Toque nos 3 pontos (menu) do navegador e selecione 'Adicionar à tela inicial' ou 'Instalar Aplicativo'.\n\nNo PC: Clique no ícone de instalação especial que fica lá na barra de endereços (perto do ícone de estrela/favoritos).");
+       alert("No seu celular (Android): Vá no menu do Chrome (3 pontos no canto superior direito) e procure por 'Adicionar à tela inicial' ou 'Instalar Aplicativo'.\n\n[AVISO]: NÃO clique na setinha de download do meio, procure pela opção escrita!");
        return;
     }
     
@@ -37,10 +37,21 @@ export function InstallAppButton() {
     setDeferredPrompt(null);
   };
 
+  if (compact) {
+    return (
+      <button 
+        onClick={handleInstallClick}
+        className="p-2 rounded-full bg-brand-success/20 hover:bg-brand-success/40 transition-colors pointer-events-auto shadow-lg shadow-brand-success/20 animate-pulse"
+      >
+        <Download className="w-5 h-5 text-brand-success" />
+      </button>
+    );
+  }
+
   return (
     <button 
       onClick={handleInstallClick}
-      className="flex flex-col items-center lg:flex-row lg:justify-start lg:w-full lg:px-4 space-y-1 lg:space-y-0 lg:space-x-3 transition-colors p-2 rounded-xl text-brand-success hover:bg-brand-success/10 font-bold"
+      className="hidden md:flex flex-col items-center lg:flex-row lg:justify-start lg:w-full lg:px-4 space-y-1 lg:space-y-0 lg:space-x-3 transition-colors p-2 rounded-xl text-brand-success hover:bg-brand-success/10 font-bold"
     >
       {isIOS ? <Share className="w-6 h-6 lg:w-5 lg:h-5" /> : <Download className="w-6 h-6 lg:w-5 lg:h-5" />}
       <span className="text-[10px] lg:text-sm font-bold min-w-max">Baixar App</span>

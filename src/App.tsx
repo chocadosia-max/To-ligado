@@ -151,6 +151,7 @@ function App() {
             <p className="text-xs text-brand-pink/80 tracking-widest font-bold">SALVO PELA ESPOSA</p>
           </div>
           <div className="flex space-x-2">
+            <InstallAppButton compact />
             <button 
               onClick={() => setActiveTab('ajustes')}
               className={`p-2 rounded-full transition-colors pointer-events-auto ${activeTab === 'ajustes' ? 'bg-brand-lilac/20' : 'bg-white/5 hover:bg-white/10'}`}
