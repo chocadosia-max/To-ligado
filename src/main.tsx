@@ -3,12 +3,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './contexts/AuthContext'
-import { InstallPWA } from './components/InstallPWA'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <InstallPWA />
       <App />
     </AuthProvider>
   </StrictMode>,

@@ -16,6 +16,7 @@ import { PactModal } from './components/PactModal';
 import { WifeRewards } from './components/WifeRewards';
 import { WifeCommandCenter } from './components/WifeCommandCenter';
 import { WifePinGate } from './components/WifePinGate';
+import { InstallAppButton } from './components/InstallPWA';
 
 type Tab = 'painel' | 'agenda' | 'ranking' | 'patroa' | 'ajustes';
 
@@ -113,6 +114,8 @@ function App() {
           <Shield className="w-6 h-6 lg:w-5 lg:h-5 mb-[1px] lg:mb-0" />
           <span className="text-[10px] lg:text-sm font-bold">A Chefe</span>
         </button>
+
+        <InstallAppButton />
         
         <div className="hidden md:block flex-1" />
         
