@@ -23,7 +23,7 @@ type Tab = 'painel' | 'agenda' | 'ranking' | 'patroa' | 'ajustes';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('painel');
-  const { session, loading: authLoading, signOut } = useAuth();
+  const { session, signOut } = useAuth();
   
   // Persistent State via Supabase (@data-squad)
   const { 
@@ -41,8 +41,7 @@ function App() {
     updateLastMedTime, 
     addAgendaItem,
     deleteAgendaItem,
-    clearTimeline,
-    loadingDb
+    clearTimeline
   } = useSupabaseData();
 
   // Derived Score (@advisory-board)
