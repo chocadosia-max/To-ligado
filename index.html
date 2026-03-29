@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0a0500">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,8 +19,8 @@
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('✅ Service Worker ativo:', reg.scope))
-            .catch(err => console.log('❌ Falha no SW:', err));
+            .then(reg => console.log('✅ Service Worker do PWABuilder ativo:', reg.scope))
+            .catch(err => console.log('❌ Falha no SW manual:', err));
         });
       }
     </script>
