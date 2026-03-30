@@ -131,7 +131,13 @@ async function connectToWhatsApp() {
       creds: state.creds,
       keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' })),
     },
-    browser: ["O Corretor", "Chrome", "1.0.0"],
+    printQRInTerminal: true,
+    mobile: false,
+    syncFullHistory: false,
+    connectTimeoutMs: 120000,   // 2 Minutos de espera na conexão
+    defaultQueryTimeoutMs: 60000, // 1 Minuto para queries
+    keepAliveIntervalMs: 30000,   // Coração batendo a cada 30s
+    browser: ["Ubuntu", "Chrome", "20.0.04"], // Identidade de Servidor Estável
   })
 
   // Salva no banco sempre que as credenciais mudarem (fire-and-forget para não bloquear)
@@ -152,30 +158,32 @@ async function connectToWhatsApp() {
     })
   }
 
-  // Pairing Code via ENV
+  // Pairing Code via ENV (Com Verificação de Saúde do Socket)
   const pairingNumber = process.env.MAIN_USER_NUMBER?.replace(/\D/g, '')
   if (pairingNumber && !sock.authState.creds.registered) {
-    console.log(`📡 [PAIRING] Alvo detectado: ${pairingNumber}. Aguardando 15s...`)
-    adicionarLogManual(`📡 [PAIRING] Alvo: ${pairingNumber}`)
+    console.log(`📡 [STABILITY] Aguardando estabilização do túnel para ${pairingNumber}...`)
+    adicionarLogManual(`📡 Túnel detectado. Preparando pareamento...`)
     
-    setTimeout(async () => {
-      if (sock.authState.creds.registered) return
-      
-      try {
-        console.log('🔌 Solicitando Código ao WhatsApp...')
-        adicionarLogManual('🔌 Solicitando Código de Pareamento...')
-        const code = await sock.requestPairingCode(pairingNumber)
-        setWAState(null, code)
-        console.log(`🔑 [PAIRING] CÓDIGO ATUAL: ${code}`)
-        adicionarLogManual(`🔑 Código Gerado com Sucesso: ${code}`)
-      } catch (err) {
-        console.error('❌ [PAIRING] Erro fatal ao solicitar código:', err.message)
-        adicionarLogManual(`❌ Erro no Pareamento: ${err.message}`)
+    // Esperamos a socket estar aberta antes de pedir o código
+    sock.ev.on('connection.update', async ({ connection }) => {
+      if (connection === 'open') return // Já conectou, ignora
+      if (connection === 'connecting' && !sock.authState.creds.registered) {
+         // Pequeno delay após o início da conexão para evitar o Connection Closed
+         setTimeout(async () => {
+           try {
+             if (sock.authState.creds.registered) return
+             console.log('🔌 [PAIRING] Solicitando Código Seguro...')
+             const code = await sock.requestPairingCode(pairingNumber)
+             setWAState(null, code)
+             console.log(`🔑 [PAIRING] CÓDIGO ATUAL: ${code}`)
+             adicionarLogManual(`🔑 Código Gerado: ${code}`)
+           } catch (err) {
+             console.error('❌ [STABILITY] Falha na conexão de pareamento:', err.message)
+             adicionarLogManual(`❌ Erro Baileys: ${err.message}`)
+           }
+         }, 10000)
       }
-    }, 15000)
-  } else if (!pairingNumber) {
-    console.log('⚠️ [PAIRING] Variável MAIN_USER_NUMBER não encontrada! Verifique seu Railway.')
-    adicionarLogManual('⚠️ MAIN_USER_NUMBER ausente!')
+    })
   }
 
   sock.ev.on('connection.update', async (update) => {
