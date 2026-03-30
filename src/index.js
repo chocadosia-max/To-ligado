@@ -30,6 +30,13 @@ app.use(cors({
 }))
 
 app.use(express.json())
+
+// Middleware de Log para diagnóstico no Railway
+app.use((req, _, next) => {
+  console.log(`📡 [HTTP] ${req.method} ${req.url} - Origin: ${req.get('origin') || 'N/A'}`)
+  next()
+})
+
 app.use('/api', router)
 
 const PORT = process.env.PORT || 3000
