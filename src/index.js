@@ -96,14 +96,20 @@ client.on('qr', async (qr) => {
   
   // Solicita código de pareamento se houver número configurado
   const pairingNumber = process.env.MAIN_USER_NUMBER?.replace(/\D/g, '')
+  
   if (pairingNumber && !latestPairingCode) {
-    try {
-      console.log(`📲 Solicitando código de pareamento para ${pairingNumber}...`)
-      latestPairingCode = await client.requestPairingCode(pairingNumber)
-      console.log(`🔑 CÓDIGO DE PAREAMENTO: ${latestPairingCode}`)
-    } catch (err) {
-      console.error('❌ Erro ao solicitar pairing code:', err)
-    }
+    console.log(`📲 Solicitando código de pareamento para ${pairingNumber} em 5s...`)
+    
+    // Pequeno delay para garantir que a UI interna está pronta (evita erro 't: t')
+    setTimeout(async () => {
+      try {
+        latestPairingCode = await client.requestPairingCode(pairingNumber)
+        console.log(`🔑 CÓDIGO DE PAREAMENTO: ${latestPairingCode}`)
+      } catch (err) {
+        console.error('❌ Erro ao solicitar pairing code:', err)
+        latestPairingCode = null // permite tentar de novo no próximo QR
+      }
+    }, 5000)
   }
 
   console.log('\n📱 Escaneie o QR Code ou use o Pairing Code no navegador...')
