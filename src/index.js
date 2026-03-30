@@ -85,8 +85,16 @@ app.listen(PORT, () => {
 
 // ── Lógica Central Baileys ─────────────────────────────────
 async function connectToWhatsApp() {
-  const { state, saveCreds } = await useMultiFileAuthState(process.env.SESSION_PATH ?? './auth_baileys')
-  const { version } = await fetchLatestBaileysVersion()
+  const sessionPath = process.env.SESSION_PATH ?? './auth_baileys'
+  const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
+  
+  let version = [2, 3000, 1015901307]
+  try {
+    const { version: latest } = await fetchLatestBaileysVersion()
+    version = latest
+  } catch (e) {
+    console.warn('⚠️ Fallback para versão padrão do WhatsApp.')
+  }
 
   const sock = makeWASocket({
     version,
@@ -149,17 +157,20 @@ async function connectToWhatsApp() {
                    
       if (!body?.startsWith('!')) continue
 
-      // Adaptador para o processarMensagem (Baileys para whatsapp-web format)
+      // Adaptador Robusto para o processarMensagem
       const mockMessage = {
         from: msg.key.remoteJid,
+        author: msg.key.participant || msg.key.remoteJid,
         body: body,
-        reply: (txt) => sock.sendMessage(msg.key.remoteJid, { text: txt })
+        reply: async (txt) => {
+          await sock.sendMessage(msg.key.remoteJid, { text: txt })
+        }
       }
 
       try {
         await processarMensagem(sock, mockMessage)
       } catch (err) {
-        console.error('Erro ao processar mensagem Baileys:', err)
+        console.error('❌ Erro no comando:', err.message)
       }
     }
   })
