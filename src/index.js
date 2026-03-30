@@ -171,13 +171,18 @@ async function connectToWhatsApp() {
       const statusCode = lastDisconnect?.error?.output?.statusCode
       console.log(`⚠️ Conexão fechada: ${statusCode}`)
       
-      if (statusCode === 401 || statusCode === 405 || statusCode === DisconnectReason.loggedOut) {
-        console.log('🚨 Sessão inválida. Limpando Geral...')
-        if (fs.existsSync(baseSessionPath)) {
-            try { fs.rmSync(baseSessionPath, { recursive: true, force: true }) } catch(e) {}
+      // Se for logout ou erro de sessão, esperamos um pouco antes de tentar de novo
+      if (statusCode === DisconnectReason.loggedOut || statusCode === 401) {
+        console.log('🚨 Sessão inválida. Reiniciando de forma limpa...')
+        // Remove apenas o arquivo de chaves se ele existir, para forçar novo QR/Login
+        const credsFile = path.join(baseSessionPath, 'creds.json')
+        if (fs.existsSync(credsFile)) {
+          try { fs.unlinkSync(credsFile) } catch(e) {}
         }
         setTimeout(connectToWhatsApp, 5000)
       } else {
+        // Erros de rede ou outros: tenta reconectar em 5 segundos
+        console.log('🔄 Tentando reconectar em 5s...')
         setTimeout(connectToWhatsApp, 5000)
       }
     } else if (connection === 'open') {
