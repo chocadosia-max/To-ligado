@@ -1,31 +1,20 @@
 FROM node:20-slim
 
-# Instala Chromium via apt (100% compatível com Railway)
-RUN apt-get update && apt-get install -y \
-    chromium \
-    fonts-freefont-ttf \
-    libxss1 \
-    libnss3 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libgbm1 \
-    libasound2 \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+# O Plano C (Baileys) não precisa de Chrome/Chromium.
+# Mantemos apenas o básico para o Node voar.
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV NODE_ENV=production
-
 WORKDIR /app
 
+# Instala apenas as dependências do Back-end
 COPY package*.json ./
-RUN npm install
+RUN npm install --omit=dev
 
+# Copia o código (e ignora a pasta frontend para não pesar o build do Railway)
 COPY . .
 
-RUN mkdir -p /app/sessions
+# Garante a pasta de autenticação
+RUN mkdir -p /app/auth_baileys
 
 EXPOSE 3000
 
