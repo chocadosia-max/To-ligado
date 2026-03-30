@@ -59,8 +59,8 @@ router.post('/missao', async (req, res) => {
 
     if (error) throw error
 
-    // Notifica no WhatsApp
-    await enviar(NUMBERS.main, `📝 Nova missão criada: *${title}*`)
+    // Notifica no WhatsApp em background (não trava o response do HTTP)
+    enviar(NUMBERS.main, `📝 Nova missão criada: *${title}*`).catch(e => console.warn('⚠️ Falha ao notificar WhatsApp:', e.message))
 
     res.json({ success: true, mission: data })
   } catch (err) {
