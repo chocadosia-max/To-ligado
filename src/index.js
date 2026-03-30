@@ -21,50 +21,59 @@ app.use('/api', router)
 // ── QR/Pairing Visualizer ──────────────────────────────────
 let latestQR = null
 let latestPairingCode = null
+let isAuthenticating = false
 
 app.get('/qr', async (req, res) => {
   if (!latestQR && !latestPairingCode) {
-    return res.send('<body style="background:#111; color:white; display:flex; align-items:center; justify-content:center; height:100vh; font-family:sans-serif;"><div><h1>⏳ Aguarde...</h1><p>O Corretor está preparando seu manifesto de conexão.</p><script>setTimeout(()=>location.reload(), 3000)</script></div></body>')
+    return res.send(`
+      <body style="background:#111; color:white; display:flex; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; text-align:center;">
+        <div>
+          <h1 style="color:#00ffa3;">⚡ INICIALIZANDO NÚCLEO...</h1>
+          <p>O Corretor está acessando os servidores do WhatsApp.</p>
+          <div style="margin-top:20px; color:#555;">Status: Aguardando sinal da rede...</div>
+          <script>setTimeout(()=>location.reload(), 5000)</script>
+        </div>
+      </body>
+    `)
   }
   
   try {
     const qrImage = latestQR ? await QRCode.toDataURL(latestQR) : null
     res.send(`
-      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; font-family:sans-serif; background:#0a0a0a; color:white; padding:20px;">
-        <h1 style="color:#00ffa3; text-transform:uppercase; letter-spacing:2px; border-bottom:2px solid #00ffa3; padding-bottom:10px;">🛡️ O CORRETOR - CENTRAL DE COMANDO</h1>
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; font-family:sans-serif; background:#050505; color:white; padding:20px;">
+        <h1 style="color:#00ffa3; text-transform:uppercase; letter-spacing:3px; border-bottom:2px solid #00ffa3; padding-bottom:10px; margin-bottom:30px;">🛡️ COMANDO TÔ LIGADO</h1>
         
-        <div style="display:flex; flex-wrap:wrap; gap:40px; justify-content:center; margin-top:30px;">
+        <div style="display:flex; flex-wrap:wrap; gap:50px; justify-content:center; width:100%; max-width:900px;">
           
-          ${qrImage ? `
-          <div style="text-align:center;">
-            <h3>OPÇÃO 1: ESCANEAR QR</h3>
-            <div style="padding:15px; background:white; border-radius:10px; width:fit-content; margin:0 auto;">
-              <img src="${qrImage}" style="width:250px; height:250px;" />
-            </div>
+          <div style="text-align:center; flex:1; min-width:300px; padding:20px; background:#0f0f0f; border-radius:15px; border:1px solid #1a1a1a;">
+            <h3 style="color:#00ffa3;">MÉTODO A: PAREAMENTO DIRETO</h3>
+            ${latestPairingCode ? `
+              <div style="padding:40px 20px; background:#000; border:2px solid #00ffa3; border-radius:10px; margin:20px 0;">
+                <span style="font-size:54px; font-weight:bold; color:#00ffa3; letter-spacing:6px; font-family:monospace;">${latestPairingCode}</span>
+              </div>
+              <p style="color:#aaa; font-size:14px;">No celular: <b>Aparelhos Conectados</b> > <b>Conectar com número</b>. Use seu número.</p>
+            ` : `
+              <div style="padding:40px 20px; color:#555;">Gerando código...</div>
+              <script>setTimeout(()=>location.reload(), 10000)</script>
+            `}
           </div>
-          ` : ''}
 
-          ${latestPairingCode ? `
-          <div style="text-align:center;">
-            <h3>OPÇÃO 2: CÓDIGO DE PAREAMENTO</h3>
-            <div style="padding:40px 20px; background:#1a1a1a; border:2px dashed #00ffa3; border-radius:10px;">
-              <span style="font-size:48px; font-weight:bold; color:#00ffa3; letter-spacing:8px; font-family:monospace;">${latestPairingCode}</span>
-            </div>
-            <p style="color:#aaa; max-width:300px; margin-top:15px;">No WhatsApp: <b>Aparelhos Conectados</b> > <b>Conectar com número</b>. Digite este código.</p>
+          <div style="text-align:center; flex:1; min-width:300px; padding:20px; background:#0f0f0f; border-radius:15px; border:1px solid #1a1a1a;">
+            <h3 style="color:#00ffa3;">MÉTODO B: QR CODE</h3>
+            ${qrImage ? `
+              <div style="padding:15px; background:white; border-radius:10px; width:fit-content; margin:20px auto;">
+                <img src="${qrImage}" style="width:220px; height:220px;" />
+              </div>
+            ` : '<div style="padding:40px 20px; color:#555;">Aguardando...</div>'}
           </div>
-          ` : ''}
 
         </div>
 
-        <p style="margin-top:40px; color:#555; font-style:italic;">A página irá fechar assim que o sistema detectar a conexão.</p>
-        <script>
-          // Recarrega se o código expirar ou se nada aparecer
-          setTimeout(() => { if(!document.querySelector('span')) location.reload() }, 20000);
-        </script>
+        <button onclick="location.reload()" style="margin-top:40px; padding:10px 20px; background:transparent; border:1px solid #333; color:#555; cursor:pointer; border-radius:5px;">FORÇAR ATUALIZAÇÃO</button>
       </div>
     `)
   } catch (err) {
-    res.status(500).send('Erro ao processar visualização')
+    res.status(500).send('Erro no sistema central.')
   }
 })
 
@@ -91,30 +100,49 @@ const client = new Client({
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
       '--disable-gpu',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
+      '--disable-extensions',
     ],
   },
 })
 
 // ── Eventos WhatsApp ───────────────────────────────────────
+let isAuthenticating = false
+
 client.on('qr', async (qr) => {
   latestQR = qr 
   
-  // Solicita código de pareamento se houver número configurado
-  const pairingNumber = process.env.MAIN_USER_NUMBER?.replace(/\D/g, '')
+  if (isAuthenticating) return // Evita múltiplas chamadas
   
+  const pairingNumber = process.env.MAIN_USER_NUMBER?.replace(/\D/g, '')
+
   if (pairingNumber && !latestPairingCode) {
-    console.log(`📲 Solicitando código de pareamento para ${pairingNumber} em 5s...`)
+    isAuthenticating = true
+    console.log(`📲 [PAIRING] Iniciando fluxo para ${pairingNumber}...`)
     
-    // Pequeno delay para garantir que a UI interna está pronta (evita erro 't: t')
+    // O WhatsApp Web demora a carregar o botão de pareamento na nuvem. 
+    // Vamos esperar 20s para garantir que o seletor está visível.
     setTimeout(async () => {
-      try {
-        latestPairingCode = await client.requestPairingCode(pairingNumber)
-        console.log(`🔑 CÓDIGO DE PAREAMENTO: ${latestPairingCode}`)
-      } catch (err) {
-        console.error('❌ Erro ao solicitar pairing code:', err)
-        latestPairingCode = null // permite tentar de novo no próximo QR
+      let attempts = 3
+      while (attempts > 0 && !latestPairingCode) {
+        try {
+          console.log(`📲 [PAIRING] Tentativa ${4 - attempts}/3...`)
+          latestPairingCode = await client.requestPairingCode(pairingNumber)
+          console.log(`🔑 [PAIRING] CÓDIGO GERADO: ${latestPairingCode}`)
+          break
+        } catch (err) {
+          console.error(`❌ [PAIRING] Falha na tentativa:`, err.message || err)
+          attempts--
+          if (attempts > 0) {
+             console.log('⏳ [PAIRING] Aguardando 10s para re-tentar...')
+             await new Promise(r => setTimeout(r, 10000))
+          }
+        }
       }
-    }, 5000)
+      isAuthenticating = false
+    }, 20000)
   }
 
   console.log('\n📱 Escaneie o QR Code ou use o Pairing Code no navegador...')
@@ -123,9 +151,10 @@ client.on('qr', async (qr) => {
 
 client.on('ready', () => {
   latestQR = null
-  latestPairingCode = null // Limpa tudo
+  latestPairingCode = null 
+  isAuthenticating = false
   console.log('✅ WhatsApp conectado!')
-  console.log('🤖 O Corretor está online. Ninguém vai escapar hoje.\n')
+  console.log('🤖 O Corretor está online e monitorando.\n')
 
   setCliente(client)
   setClienteHTTP(client)
