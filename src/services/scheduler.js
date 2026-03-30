@@ -22,8 +22,8 @@ export function setCliente(client) {
 async function enviar(numero, texto) {
   if (!clienteWA) return
   try {
-    const chatId = `${numero}@c.us`
-    await clienteWA.sendMessage(chatId, texto)
+    const chatId = `${numero}@s.whatsapp.net`
+    await clienteWA.sendMessage(chatId, { text: texto })
     console.log(`📤 [${moment().tz(TIMEZONE).format('HH:mm')}] → ${numero}: ${texto.slice(0, 60)}...`)
   } catch (err) {
     console.error(`❌ Erro ao enviar para ${numero}:`, err.message)

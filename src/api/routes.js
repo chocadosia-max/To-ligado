@@ -20,7 +20,7 @@ export function setClienteHTTP(client) {
 const enviar = async (numero, texto) => {
   if (!clienteWA) return
   try {
-    await clienteWA.sendMessage(`${numero}@c.us`, texto)
+    await clienteWA.sendMessage(`${numero}@s.whatsapp.net`, { text: texto })
   } catch (err) {
     console.error('HTTP enviar:', err.message)
   }
