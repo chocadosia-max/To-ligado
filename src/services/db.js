@@ -132,3 +132,23 @@ export async function getResumoDia(userId) {
   const feitas  = missoes.filter(m => m.status === MISSION_STATUS.DONE).length
   return { feitas, total: missoes.length, missoes }
 }
+
+// ── Persistência de sessão Baileys no Supabase ─────────────
+export async function salvarSessaoNoBanco(sessionId, credsData) {
+  if (!supabase) return
+  const { error } = await supabase
+    .from('sessions')
+    .upsert({ id: sessionId, data: credsData, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+  if (error) console.error('⚠️ Erro ao salvar sessão no Supabase:', error.message)
+}
+
+export async function carregarSessaoDoBanco(sessionId) {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('data')
+    .eq('id', sessionId)
+    .single()
+  if (error) return null
+  return data?.data ?? null
+}

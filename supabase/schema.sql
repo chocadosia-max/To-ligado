@@ -40,6 +40,13 @@ CREATE TABLE IF NOT EXISTS penalties (
 CREATE INDEX IF NOT EXISTS idx_missions_user_date ON missions(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_missions_status    ON missions(status);
 
+-- SESSIONS (persistência da sessão Baileys entre deploys)
+CREATE TABLE IF NOT EXISTS sessions (
+  id          TEXT PRIMARY KEY,             -- ex: 'main_session'
+  data        JSONB NOT NULL,               -- credenciais do Baileys
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ── Inserir usuários iniciais (ajuste os números) ──────────
 INSERT INTO users (name, whatsapp, role, score) VALUES
   ('Você',     '5592981134347', 'user',    0),
