@@ -14,8 +14,10 @@ import {
 import { iniciarCrons, setCliente } from './services/scheduler.js'
 import { processarMensagem } from './handlers/comandos.js'
 import { router, setClienteHTTP } from './api/routes.js'
+import { salvarSessaoNoBanco, carregarSessaoDoBanco } from './services/db.js'
 
 import fs from 'fs'
+import path from 'path'
 
 // ── Express & API ──────────────────────────────────────────
 const app  = express()
@@ -91,6 +93,18 @@ app.get('/qr', (req, res) => {
 async function connectToWhatsApp() {
   console.log('🚀 Iniciando conexão Baileys...')
   const baseSessionPath = process.env.SESSION_PATH ? `${process.env.SESSION_PATH}_baileys` : './auth_baileys'
+  
+  // 1. TENTA RECUPERAR DO BANCO SE A PASTA ESTIVER VAZIA (Deploy Novo)
+  if (!fs.existsSync(path.join(baseSessionPath, 'creds.json'))) {
+    console.log('📂 Pasta Local Vazia. Tentando baixar sessão do Supabase...')
+    const sessaoDb = await carregarSessaoDoBanco('main_session')
+    if (sessaoDb) {
+      if (!fs.existsSync(baseSessionPath)) fs.mkdirSync(baseSessionPath, { recursive: true })
+      fs.writeFileSync(path.join(baseSessionPath, 'creds.json'), JSON.stringify(sessaoDb))
+      console.log('✅ Sessão recuperada do Supabase com sucesso!')
+    }
+  }
+
   const { state, saveCreds } = await useMultiFileAuthState(baseSessionPath)
   
   const sock = makeWASocket({
@@ -102,6 +116,14 @@ async function connectToWhatsApp() {
     },
     browser: ["O Corretor", "Chrome", "1.0.0"],
   })
+
+  // Salva no banco sempre que as credenciais mudarem
+  const originalSaveCreds = saveCreds
+  const hijackedSaveCreds = async () => {
+    await originalSaveCreds()
+    const creds = JSON.parse(fs.readFileSync(path.join(baseSessionPath, 'creds.json'), 'utf-8'))
+    await salvarSessaoNoBanco('main_session', creds)
+  }
 
   // Pairing Code via ENV
   const pairingNumber = process.env.MAIN_USER_NUMBER?.replace(/\D/g, '')
@@ -117,7 +139,7 @@ async function connectToWhatsApp() {
     }, 2000)
   }
 
-  sock.ev.on('connection.update', (update) => {
+  sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update
     if (qr) latestQR = qr
     
@@ -125,23 +147,13 @@ async function connectToWhatsApp() {
       const statusCode = lastDisconnect?.error?.output?.statusCode
       console.log(`⚠️ Conexão fechada: ${statusCode}`)
       
-      // Erro 405 ou LoggedOut: Sessão morreu, precisa limpar e recomeçar
-      if (statusCode === 405 || statusCode === DisconnectReason.loggedOut) {
-        console.log('🚨 Sessão inválida/expirada. Limpando credenciais...')
-        try {
-          if (fs.existsSync(baseSessionPath)) {
-            fs.rmSync(baseSessionPath, { recursive: true, force: true })
-          }
-        } catch (e) {
-          console.error('Erro ao limpar pasta de auth:', e.message)
-        }
+      if (statusCode === 401 || statusCode === 405 || statusCode === DisconnectReason.loggedOut) {
+        console.log('🚨 Sessão inválida. Limpando Geral...')
+        if (fs.existsSync(baseSessionPath)) fs.rmSync(baseSessionPath, { recursive: true, force: true })
+        // Opcional: deletar do banco também se quiser forçar novo QR
         setTimeout(connectToWhatsApp, 5000)
       } else {
-        // Tenta reconectar em outros casos (rede, etc)
-        const shouldReconnect = statusCode !== DisconnectReason.loggedOut
-        if (shouldReconnect) {
-          setTimeout(connectToWhatsApp, 5000)
-        }
+        setTimeout(connectToWhatsApp, 5000)
       }
     } else if (connection === 'open') {
       console.log('✅ Baileys Conectado!')
@@ -150,10 +162,14 @@ async function connectToWhatsApp() {
       setCliente(sock)
       setClienteHTTP(sock)
       iniciarCrons()
+      
+      // Backup final da sessão conectada no banco
+      const creds = JSON.parse(fs.readFileSync(path.join(baseSessionPath, 'creds.json'), 'utf-8'))
+      await salvarSessaoNoBanco('main_session', creds)
     }
   })
 
-  sock.ev.on('creds.update', saveCreds)
+  sock.ev.on('creds.update', hijackedSaveCreds)
   sock.ev.on('messages.upsert', async (m) => {
     if (m.type !== 'notify') return
     for (const msg of m.messages) {
