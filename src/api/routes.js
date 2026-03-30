@@ -33,18 +33,28 @@ router.get('/health', (_, res) => {
 
 // ── Adicionar missão manualmente ───────────────────────────
 router.post('/missao', async (req, res) => {
-  try {
-    const { user_phone, title, scheduled_time, date } = req.body
+  const { user_phone, title, scheduled_time, date } = req.body
+  console.log(`📝 [MISSÃO] Tentativa de criar para: ${user_phone} - Titulo: ${title}`)
 
+  try {
     if (!user_phone || !title) {
       return res.status(400).json({ error: 'user_phone e title são obrigatórios' })
     }
 
+    // 1. Busca Usuário
     const user = await getUserByPhone(user_phone)
-    if (!user) return res.status(404).json({ error: 'Usuário não encontrado' })
+    if (!user) {
+      console.error(`❌ [MISSÃO] Usuário ${user_phone} não encontrado no banco!`)
+      return res.status(404).json({ error: `Usuário ${user_phone} não está cadastrado no banco do Supabase.` })
+    }
 
-    if (!supabase) return res.status(503).json({ error: 'Banco de dados não configurado' })
+    if (!supabase) {
+      console.error('❌ [MISSÃO] Supabase não inicializado!')
+      return res.status(503).json({ error: 'Backend não conseguiu conectar ao Supabase. Verifique as chaves ENV.' })
+    }
 
+    // 2. Insere no Banco
+    console.log(`💾 [MISSÃO] Gravando no banco para user_id: ${user.id}...`)
     const { data, error } = await supabase
       .from('missions')
       .insert({
@@ -57,15 +67,22 @@ router.post('/missao', async (req, res) => {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('❌ [MISSÃO] Erro do Supabase ao inserir:', error.message)
+      throw error
+    }
 
-    // Notifica no WhatsApp em background (não trava o response do HTTP)
-    enviar(NUMBERS.main, `📝 Nova missão criada: *${title}*`).catch(e => console.warn('⚠️ Falha ao notificar WhatsApp:', e.message))
+    console.log('✅ [MISSÃO] Salva com sucesso no banco!')
 
-    res.json({ success: true, mission: data })
+    // 3. Notifica no WhatsApp em background (fire and forget total)
+    setImmediate(() => {
+        enviar(NUMBERS.main, `📝 Nova missão criada: *${title}*`).catch(e => console.warn('⚠️ Erro notificação WA:', e.message))
+    })
+
+    return res.json({ success: true, mission: data })
   } catch (err) {
-    console.error('POST /missao:', err)
-    res.status(500).json({ error: err.message })
+    console.error('💥 [MISSÃO] Erro fatal no POST /missao:', err)
+    return res.status(500).json({ error: 'Erro interno ao salvar: ' + err.message })
   }
 })
 
