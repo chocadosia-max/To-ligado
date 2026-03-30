@@ -1,4 +1,5 @@
 import express from 'express'
+import QRCode from 'qrcode'
 import { supabase } from '../config/supabase.js'
 import { NUMBERS } from '../config/constants.js'
 import { mensagens } from '../messages/sarcasmo.js'
@@ -12,9 +13,16 @@ import { MISSION_STATUS } from '../config/constants.js'
 export const router = express.Router()
 
 let clienteWA = null
+let latestQR = null
+let latestPairingCode = null
 
 export function setClienteHTTP(client) {
   clienteWA = client
+}
+
+export function setWAState(qr, pairingCode) {
+  latestQR = qr
+  latestPairingCode = pairingCode
 }
 
 const enviar = async (numero, texto) => {
@@ -26,9 +34,44 @@ const enviar = async (numero, texto) => {
   }
 }
 
-// ── Health check ───────────────────────────────────────────
-router.get('/health', (_, res) => {
-  res.json({ status: 'ok', ts: new Date().toISOString() })
+// ── Endpoints de Diagnóstico ───────────────────────────────────
+router.get('/health', (req, res) => {
+  res.json({ 
+    status: 'online', 
+    whatsapp: clienteWA ? 'conectado' : 'desconectado',
+    tem_qr: !!latestQR,
+    tem_pairing: !!latestPairingCode
+  })
+})
+
+router.get('/qr', (req, res) => {
+  if (latestQR) {
+    QRCode.toDataURL(latestQR, (err, url) => {
+      if (err) return res.status(500).send('Erro ao gerar imagem do QR Code')
+      res.send(`<body style="background:#111;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
+        <h1 style="color:#00ff88;">TÔ LIGADO | CONEXÃO</h1>
+        <div style="background:white;padding:20px;border-radius:15px;box-shadow:0 0 30px rgba(0,255,136,0.2);">
+          <img src="${url}" style="width:300px;">
+        </div>
+        <p style="margin-top:20px;opacity:0.7;">Escaneie agora! O QR code expira rápido.</p>
+        <button onclick="window.location.reload()" style="background:#333;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">Atualizar QR</button>
+      </body>`)
+    })
+  } else if (clienteWA) {
+    res.send('<body style="background:#111;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h1>✅ WhatsApp Conectado!</h1><p>O bot já está pronto para o combate.</p></body>')
+  } else {
+    res.send('<body style="background:#111;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h1>⏳ Gerando QR Code...</h1><p>Aguardando o servidor Baileys iniciar. Atualize em 5 segundos.</p></body>')
+  }
+})
+
+router.get('/pairing-code', (req, res) => {
+  if (latestPairingCode) {
+    res.json({ code: latestPairingCode })
+  } else if (clienteWA) {
+    res.json({ message: 'O bot já está conectado ao WhatsApp!' })
+  } else {
+    res.json({ message: 'Aguardando o servidor gerar o código de pareamento...' })
+  }
 })
 
 // ── Adicionar missão manualmente ───────────────────────────

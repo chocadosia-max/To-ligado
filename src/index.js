@@ -13,7 +13,7 @@ import {
 
 import { iniciarCrons, setCliente } from './services/scheduler.js'
 import { processarMensagem } from './handlers/comandos.js'
-import { router, setClienteHTTP } from './api/routes.js'
+import { router, setClienteHTTP, setWAState } from './api/routes.js'
 import { salvarSessaoNoBanco, carregarSessaoDoBanco } from './services/db.js'
 
 import fs from 'fs'
@@ -155,7 +155,7 @@ async function connectToWhatsApp() {
     setTimeout(async () => {
       try {
         const code = await sock.requestPairingCode(pairingNumber)
-        latestPairingCode = code
+        setWAState(null, code)
         console.log(`🔑 [PAIRING] CÓDIGO: ${code}`)
       } catch (err) {
         console.error('❌ [PAIRING] Erro:', err.message)
@@ -165,7 +165,7 @@ async function connectToWhatsApp() {
 
   sock.ev.on('connection.update', async (update) => {
     const { connection, lastDisconnect, qr } = update
-    if (qr) latestQR = qr
+    if (qr) setWAState(qr, null)
     
     if (connection === 'close') {
       const statusCode = lastDisconnect?.error?.output?.statusCode
@@ -187,8 +187,7 @@ async function connectToWhatsApp() {
       }
     } else if (connection === 'open') {
       console.log('✅ Baileys Conectado!')
-      latestQR = null
-      latestPairingCode = null
+      setWAState(null, null)
       setCliente(sock)
       setClienteHTTP(sock)
       iniciarCrons()
