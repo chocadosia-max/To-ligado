@@ -23,6 +23,10 @@ function adicionarLog(ms) {
   if (logsServidor.length > 50) logsServidor.shift()
 }
 
+export function adicionarLogManual(ms) {
+  adicionarLog(ms)
+}
+
 // Captura logs do console
 const originalLog = console.log
 const originalError = console.error
@@ -99,6 +103,11 @@ router.get('/logs', (req, res) => {
     </div>
     <script>setTimeout(() => window.location.reload(), 3000)</script>
   </body>`)
+})
+
+router.get('/reset', (req, res) => {
+  res.send('<body style="background:#111;color:white;padding:20px;font-family:sans-serif;"><h1>🧹 Realizando Reset de Fábrica...</h1><p>O servidor vai reiniciar limpando a sessão. Aguarde 15s e abra os /logs.</p><script>setTimeout(() => window.location.href="/api/logs", 5000)</script></body>')
+  process.exit(1) // O Railway reinicia o processo automaticamente
 })
 
 // ── Adicionar missão manualmente ───────────────────────────

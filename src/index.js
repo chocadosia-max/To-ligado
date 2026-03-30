@@ -13,11 +13,14 @@ import {
 
 import { iniciarCrons, setCliente } from './services/scheduler.js'
 import { processarMensagem } from './handlers/comandos.js'
-import { router, setClienteHTTP, setWAState } from './api/routes.js'
+import { router, setClienteHTTP, setWAState, adicionarLogManual } from './api/routes.js'
 import { salvarSessaoNoBanco, carregarSessaoDoBanco } from './services/db.js'
 
 import fs from 'fs'
 import path from 'path'
+
+console.log('🚀 [BOT] Iniciando motor principal...')
+adicionarLogManual('🚀 Motor principal iniciado...')
 
 // ── Express & API ──────────────────────────────────────────
 const app  = express()
@@ -152,19 +155,27 @@ async function connectToWhatsApp() {
   // Pairing Code via ENV
   const pairingNumber = process.env.MAIN_USER_NUMBER?.replace(/\D/g, '')
   if (pairingNumber && !sock.authState.creds.registered) {
-    console.log(`📡 [PAIRING] Gerando código para ${pairingNumber} em 15 segundos...`)
+    console.log(`📡 [PAIRING] Alvo detectado: ${pairingNumber}. Aguardando 15s...`)
+    adicionarLogManual(`📡 [PAIRING] Alvo: ${pairingNumber}`)
+    
     setTimeout(async () => {
-      // Verifica se já conectou nesse meio tempo
       if (sock.authState.creds.registered) return
       
       try {
+        console.log('🔌 Solicitando Código ao WhatsApp...')
+        adicionarLogManual('🔌 Solicitando Código de Pareamento...')
         const code = await sock.requestPairingCode(pairingNumber)
         setWAState(null, code)
         console.log(`🔑 [PAIRING] CÓDIGO ATUAL: ${code}`)
+        adicionarLogManual(`🔑 Código Gerado com Sucesso: ${code}`)
       } catch (err) {
-        console.error('❌ [PAIRING] Erro:', err.message)
+        console.error('❌ [PAIRING] Erro fatal ao solicitar código:', err.message)
+        adicionarLogManual(`❌ Erro no Pareamento: ${err.message}`)
       }
-    }, 15000) // 15 segundos de paz
+    }, 15000)
+  } else if (!pairingNumber) {
+    console.log('⚠️ [PAIRING] Variável MAIN_USER_NUMBER não encontrada! Verifique seu Railway.')
+    adicionarLogManual('⚠️ MAIN_USER_NUMBER ausente!')
   }
 
   sock.ev.on('connection.update', async (update) => {
