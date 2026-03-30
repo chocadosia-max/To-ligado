@@ -39,7 +39,7 @@ app.use((req, _, next) => {
 
 app.use('/api', router)
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 8080
 
 // 1. Iniciamos o Express PRIMEIRO para o Railway ficar feliz
 app.listen(PORT, '0.0.0.0', () => {
