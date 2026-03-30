@@ -68,16 +68,35 @@ const viewCache = {
 // ── Lógica de Dados ────────────────────────────────────────
 async function fetchDashboard() {
   try {
+    console.log('📡 Conectando ao servidor central em:', API_BASE)
+    
+    // Teste de conexão/saúde
+    const health = await fetch(`${API_BASE}/health`).catch(e => {
+        console.warn('⚠️ Health check falhou:', e.message)
+        return null
+    })
+    
+    if (health && health.ok) {
+        document.querySelector('.status-badge').innerHTML = '<span class="dot active"></span> ONLINE'
+        document.querySelector('.status-badge .dot').style.background = '#00ffa3'
+    } else {
+        document.querySelector('.status-badge').innerHTML = '<span class="dot offline"></span> OFFLINE'
+        document.querySelector('.status-badge .dot').style.background = '#ff0055'
+    }
+
     // 1. Busca missões
     const res = await fetch(`${API_BASE}/missoes/${USER_PHONE}`)
-    if (!res.ok) throw new Error('Falha ao conectar com o servidor central')
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${res.status}`)
+    }
     const missions = await res.json()
     
     renderMissions(missions)
     updateStats(missions)
   } catch (err) {
-    console.error('Erro no Dashboard:', err)
-    missionsContainer.innerHTML = `<div class="loading-state" style="color: var(--danger)">ERRO DE CONEXÃO: ${err.message}</div>`
+    console.error('❌ Erro no Dashboard:', err)
+    missionsContainer.innerHTML = `<div class="loading-state" style="color: var(--danger)">ERRO DE CONEXÃO: ${err.message}<br><small style="opacity: 0.5; font-size: 10px;">Verifique se o backend no Railway está ativo.</small></div>`
   }
 }
 
