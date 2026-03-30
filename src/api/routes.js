@@ -43,6 +43,8 @@ router.post('/missao', async (req, res) => {
     const user = await getUserByPhone(user_phone)
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' })
 
+    if (!supabase) return res.status(503).json({ error: 'Banco de dados não configurado' })
+
     const { data, error } = await supabase
       .from('missions')
       .insert({

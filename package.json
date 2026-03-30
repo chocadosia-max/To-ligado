@@ -5,7 +5,7 @@
   "description": "🤖 Bot WhatsApp - Sistema de Gamificação Tô Ligado",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node --max-old-space-size=400 src/index.js",
     "dev": "node --watch src/index.js"
   },
   "dependencies": {

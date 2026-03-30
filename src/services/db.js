@@ -5,6 +5,7 @@ import { TIMEZONE } from '../config/constants.js'
 
 // ── Busca missões de um usuário para hoje ──────────────────
 export async function getMissoesHoje(userId) {
+  if (!supabase) return []
   const hoje = moment().tz(TIMEZONE).format('YYYY-MM-DD')
   const { data, error } = await supabase
     .from('missions')
@@ -114,6 +115,7 @@ export async function adicionarPontos(userId, pontos = 10) {
 
 // ── Busca usuário pelo número de WhatsApp ──────────────────
 export async function getUserByPhone(phone) {
+  if (!supabase) return null
   const { data, error } = await supabase
     .from('users')
     .select('*')

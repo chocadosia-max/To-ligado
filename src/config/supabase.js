@@ -4,8 +4,12 @@ import 'dotenv/config'
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_ANON_KEY
 
+let client = null
+
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error('❌ SUPABASE_URL e SUPABASE_ANON_KEY são obrigatórios no .env')
+  console.warn('⚠️ SUPABASE_URL e/ou SUPABASE_ANON_KEY não estão definidos no .env. App rodará com BD desativado.')
+} else {
+  client = createClient(supabaseUrl, supabaseKey)
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = client
