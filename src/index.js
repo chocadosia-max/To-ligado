@@ -152,15 +152,19 @@ async function connectToWhatsApp() {
   // Pairing Code via ENV
   const pairingNumber = process.env.MAIN_USER_NUMBER?.replace(/\D/g, '')
   if (pairingNumber && !sock.authState.creds.registered) {
+    console.log(`📡 [PAIRING] Gerando código para ${pairingNumber} em 15 segundos...`)
     setTimeout(async () => {
+      // Verifica se já conectou nesse meio tempo
+      if (sock.authState.creds.registered) return
+      
       try {
         const code = await sock.requestPairingCode(pairingNumber)
         setWAState(null, code)
-        console.log(`🔑 [PAIRING] CÓDIGO: ${code}`)
+        console.log(`🔑 [PAIRING] CÓDIGO ATUAL: ${code}`)
       } catch (err) {
         console.error('❌ [PAIRING] Erro:', err.message)
       }
-    }, 2000)
+    }, 15000) // 15 segundos de paz
   }
 
   sock.ev.on('connection.update', async (update) => {
@@ -179,11 +183,11 @@ async function connectToWhatsApp() {
         if (fs.existsSync(credsFile)) {
           try { fs.unlinkSync(credsFile) } catch(e) {}
         }
-        setTimeout(connectToWhatsApp, 5000)
+        setTimeout(connectToWhatsApp, 15000)
       } else {
-        // Erros de rede ou outros: tenta reconectar em 5 segundos
-        console.log('🔄 Tentando reconectar em 5s...')
-        setTimeout(connectToWhatsApp, 5000)
+        // Erros de rede ou outros: tenta reconectar em 15 segundos
+        console.log('🔄 Tentando reconectar em 15s...')
+        setTimeout(connectToWhatsApp, 15000)
       }
     } else if (connection === 'open') {
       console.log('✅ Baileys Conectado!')
