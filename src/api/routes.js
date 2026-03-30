@@ -15,6 +15,25 @@ export const router = express.Router()
 let clienteWA = null
 let latestQR = null
 let latestPairingCode = null
+let logsServidor = []
+
+function adicionarLog(ms) {
+  const time = new Date().toLocaleTimeString('pt-BR')
+  logsServidor.push(`[${time}] ${ms}`)
+  if (logsServidor.length > 50) logsServidor.shift()
+}
+
+// Captura logs do console
+const originalLog = console.log
+const originalError = console.error
+console.log = (...args) => {
+  adicionarLog(args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '))
+  originalLog(...args)
+}
+console.error = (...args) => {
+  adicionarLog('❌ ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' '))
+  originalError(...args)
+}
 
 export function setClienteHTTP(client) {
   clienteWA = client
@@ -70,6 +89,16 @@ router.get('/pairing-code', (req, res) => {
   } else {
     res.json({ message: 'Aguardando o servidor gerar o código de pareamento...' })
   }
+})
+
+router.get('/logs', (req, res) => {
+  res.send(`<body style="background:#000;color:#0f0;padding:20px;font-family:monospace;line-height:1.5;">
+    <h2 style="color:white;border-bottom:1px solid #333;padding-bottom:10px;">📋 Logs do Sistema (Últimas 50 linhas)</h2>
+    <div style="display:flex;flex-direction:column-reverse;">
+      ${logsServidor.map(l => `<div>${l}</div>`).join('')}
+    </div>
+    <script>setTimeout(() => window.location.reload(), 3000)</script>
+  </body>`)
 })
 
 // ── Adicionar missão manualmente ───────────────────────────
