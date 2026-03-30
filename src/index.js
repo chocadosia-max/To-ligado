@@ -122,9 +122,27 @@ async function connectToWhatsApp() {
     if (qr) latestQR = qr
     
     if (connection === 'close') {
-      const statusCode = lastDisconnect.error?.output?.statusCode
+      const statusCode = lastDisconnect?.error?.output?.statusCode
       console.log(`⚠️ Conexão fechada: ${statusCode}`)
-      if (statusCode !== DisconnectReason.loggedOut) connectToWhatsApp()
+      
+      // Erro 405 ou LoggedOut: Sessão morreu, precisa limpar e recomeçar
+      if (statusCode === 405 || statusCode === DisconnectReason.loggedOut) {
+        console.log('🚨 Sessão inválida/expirada. Limpando credenciais...')
+        try {
+          if (fs.existsSync(baseSessionPath)) {
+            fs.rmSync(baseSessionPath, { recursive: true, force: true })
+          }
+        } catch (e) {
+          console.error('Erro ao limpar pasta de auth:', e.message)
+        }
+        setTimeout(connectToWhatsApp, 5000)
+      } else {
+        // Tenta reconectar em outros casos (rede, etc)
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut
+        if (shouldReconnect) {
+          setTimeout(connectToWhatsApp, 5000)
+        }
+      }
     } else if (connection === 'open') {
       console.log('✅ Baileys Conectado!')
       latestQR = null
