@@ -18,37 +18,59 @@ import QRCode from 'qrcode'
 app.use(express.json())
 app.use('/api', router)
 
-// ── QR Code Visualizer ──────────────────────────────────────
+// ── QR/Pairing Visualizer ──────────────────────────────────
 let latestQR = null
+let latestPairingCode = null
 
 app.get('/qr', async (req, res) => {
-  if (!latestQR) {
-    return res.send('<h1>⏳ QR Code ainda não gerado ou o bot já está logado.</h1><p>Aguarde uns segundos e recarregue.</p><script>setTimeout(()=>location.reload(), 3000)</script>')
+  if (!latestQR && !latestPairingCode) {
+    return res.send('<body style="background:#111; color:white; display:flex; align-items:center; justify-content:center; height:100vh; font-family:sans-serif;"><div><h1>⏳ Aguarde...</h1><p>O Corretor está preparando seu manifesto de conexão.</p><script>setTimeout(()=>location.reload(), 3000)</script></div></body>')
   }
   
   try {
-    const qrImage = await QRCode.toDataURL(latestQR)
+    const qrImage = latestQR ? await QRCode.toDataURL(latestQR) : null
     res.send(`
-      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; font-family:sans-serif; background:#111; color:white;">
-        <h1 style="color:#00ffa3;">🤖 O Corretor - Conectar</h1>
-        <p>Escaneie o código abaixo com o WhatsApp:</p>
-        <div style="padding:20px; background:white; border-radius:10px;">
-          <img src="${qrImage}" style="width:300px; height:300px;" />
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; font-family:sans-serif; background:#0a0a0a; color:white; padding:20px;">
+        <h1 style="color:#00ffa3; text-transform:uppercase; letter-spacing:2px; border-bottom:2px solid #00ffa3; padding-bottom:10px;">🛡️ O CORRETOR - CENTRAL DE COMANDO</h1>
+        
+        <div style="display:flex; flex-wrap:wrap; gap:40px; justify-content:center; margin-top:30px;">
+          
+          ${qrImage ? `
+          <div style="text-align:center;">
+            <h3>OPÇÃO 1: ESCANEAR QR</h3>
+            <div style="padding:15px; background:white; border-radius:10px; width:fit-content; margin:0 auto;">
+              <img src="${qrImage}" style="width:250px; height:250px;" />
+            </div>
+          </div>
+          ` : ''}
+
+          ${latestPairingCode ? `
+          <div style="text-align:center;">
+            <h3>OPÇÃO 2: CÓDIGO DE PAREAMENTO</h3>
+            <div style="padding:40px 20px; background:#1a1a1a; border:2px dashed #00ffa3; border-radius:10px;">
+              <span style="font-size:48px; font-weight:bold; color:#00ffa3; letter-spacing:8px; font-family:monospace;">${latestPairingCode}</span>
+            </div>
+            <p style="color:#aaa; max-width:300px; margin-top:15px;">No WhatsApp: <b>Aparelhos Conectados</b> > <b>Conectar com número</b>. Digite este código.</p>
+          </div>
+          ` : ''}
+
         </div>
-        <p style="margin-top:20px; color:#aaa;">O sistema irá recarregar automaticamente após a conexão.</p>
+
+        <p style="margin-top:40px; color:#555; font-style:italic;">A página irá fechar assim que o sistema detectar a conexão.</p>
         <script>
-          // Opcional: checar se conectou para fechar a tela
+          // Recarrega se o código expirar ou se nada aparecer
+          setTimeout(() => { if(!document.querySelector('span')) location.reload() }, 20000);
         </script>
       </div>
     `)
   } catch (err) {
-    res.status(500).send('Erro ao gerar imagem do QR Code')
+    res.status(500).send('Erro ao processar visualização')
   }
 })
 
 app.listen(PORT, () => {
-  console.log(`🌐 API rodando na porta ${PORT}`)
-  console.log(`🔗 Scaneie o QR Code em: https://[sua-url-do-railway].railway.app/qr`)
+  console.log(`🌐 API ONLINE na porta ${PORT}`)
+  console.log(`🔗 PAINEL DE CONEXÃO: https://[seu-site].up.railway.app/qr`)
 })
 
 // ── WhatsApp Client ────────────────────────────────────────
@@ -69,14 +91,28 @@ const client = new Client({
 })
 
 // ── Eventos WhatsApp ───────────────────────────────────────
-client.on('qr', (qr) => {
-  latestQR = qr // Guarda para o navegador
-  console.log('\n📱 Escaneie o QR Code abaixo no WhatsApp:\n')
+client.on('qr', async (qr) => {
+  latestQR = qr 
+  
+  // Solicita código de pareamento se houver número configurado
+  const pairingNumber = process.env.MAIN_USER_NUMBER?.replace(/\D/g, '')
+  if (pairingNumber && !latestPairingCode) {
+    try {
+      console.log(`📲 Solicitando código de pareamento para ${pairingNumber}...`)
+      latestPairingCode = await client.requestPairingCode(pairingNumber)
+      console.log(`🔑 CÓDIGO DE PAREAMENTO: ${latestPairingCode}`)
+    } catch (err) {
+      console.error('❌ Erro ao solicitar pairing code:', err)
+    }
+  }
+
+  console.log('\n📱 Escaneie o QR Code ou use o Pairing Code no navegador...')
   qrcode.generate(qr, { small: true })
 })
 
 client.on('ready', () => {
-  latestQR = null // Limpa após logar
+  latestQR = null
+  latestPairingCode = null // Limpa tudo
   console.log('✅ WhatsApp conectado!')
   console.log('🤖 O Corretor está online. Ninguém vai escapar hoje.\n')
 
