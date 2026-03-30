@@ -15,6 +15,8 @@ import { iniciarCrons, setCliente } from './services/scheduler.js'
 import { processarMensagem } from './handlers/comandos.js'
 import { router, setClienteHTTP } from './api/routes.js'
 
+import fs from 'fs'
+
 // ── Express & API ──────────────────────────────────────────
 const app  = express()
 app.use(cors())
@@ -79,15 +81,15 @@ app.get('/qr', async (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌐 PLANO C ONLINE na porta ${PORT}`)
   console.log(`🔗 PAINEL: https://to-ligado-production.up.railway.app/qr`)
 })
 
 // ── Lógica Central Baileys ─────────────────────────────────
 async function connectToWhatsApp() {
-  const sessionPath = process.env.SESSION_PATH ?? './auth_baileys'
-  const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
+  const baseSessionPath = process.env.SESSION_PATH ? `${process.env.SESSION_PATH}_baileys` : './auth_baileys'
+  const { state, saveCreds } = await useMultiFileAuthState(baseSessionPath)
   
   let version = [2, 3000, 1015901307]
   try {
@@ -129,9 +131,17 @@ async function connectToWhatsApp() {
     if (qr) latestQR = qr
     
     if (connection === 'close') {
-      const shouldReconnect = lastDisconnect.error?.output?.statusCode !== DisconnectReason.loggedOut
-      console.log('⚠️ Conexão Baileys fechada. Reconectando...', shouldReconnect)
-      if (shouldReconnect) connectToWhatsApp()
+      const statusCode = lastDisconnect.error?.output?.statusCode
+      console.log(`⚠️ Conexão Baileys fechada. Reason: ${statusCode}`)
+      
+      if (statusCode === DisconnectReason.loggedOut) {
+        console.log('🚨 Sessão expirada ou deslogada! Limpando dados corrompidos para reiniciar...')
+        fs.rmSync(baseSessionPath, { recursive: true, force: true })
+        connectToWhatsApp()
+      } else {
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut
+        if (shouldReconnect) connectToWhatsApp()
+      }
     } else if (connection === 'open') {
       console.log('✅ Baileys Conectado com Sucesso!')
       latestQR = null
@@ -177,4 +187,4 @@ async function connectToWhatsApp() {
   })
 }
 
-connectToWhatsApp()
+connectToWhatsApp().catch(err => console.error('FATAL SYSTEM ERROR:', err))
