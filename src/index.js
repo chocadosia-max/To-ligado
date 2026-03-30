@@ -39,11 +39,11 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌐 SERVIDOR API ONLINE na porta ${PORT}`)
   console.log(`✅ Health check: /api/health`)
   
-  // 2. Iniciamos o WhatsApp com um leve delay para não pesar o boot
-  console.log('⏳ Aguardando 5s para iniciar Baileys...')
+  // 2. Iniciamos o WhatsApp com delay mínimo para o Railway registrar a porta
+  console.log('⏳ Aguardando 1s para iniciar Baileys...')
   setTimeout(() => {
     connectToWhatsApp().catch(err => console.error('FATAL WHATSAPP ERROR:', err))
-  }, 5000)
+  }, 1000)
 })
 
 let latestQR = null
@@ -107,8 +107,12 @@ async function connectToWhatsApp() {
 
   const { state, saveCreds } = await useMultiFileAuthState(baseSessionPath)
   
+  // Busca a versão mais recente do protocolo WA dinamicamente
+  const { version, isLatest } = await fetchLatestBaileysVersion()
+  console.log(`📡 Baileys versão: ${version.join('.')} | Mais recente: ${isLatest}`)
+
   const sock = makeWASocket({
-    version: [2, 3000, 1015901307],
+    version,
     logger: pino({ level: 'silent' }),
     auth: {
       creds: state.creds,
@@ -117,12 +121,19 @@ async function connectToWhatsApp() {
     browser: ["O Corretor", "Chrome", "1.0.0"],
   })
 
-  // Salva no banco sempre que as credenciais mudarem
+  // Salva no banco sempre que as credenciais mudarem (fire-and-forget para não bloquear)
   const originalSaveCreds = saveCreds
   const hijackedSaveCreds = async () => {
     await originalSaveCreds()
-    const creds = JSON.parse(fs.readFileSync(path.join(baseSessionPath, 'creds.json'), 'utf-8'))
-    await salvarSessaoNoBanco('main_session', creds)
+    // Backup no Supabase de forma assíncrona, sem bloquear o event loop
+    setImmediate(async () => {
+      try {
+        const creds = JSON.parse(fs.readFileSync(path.join(baseSessionPath, 'creds.json'), 'utf-8'))
+        await salvarSessaoNoBanco('main_session', creds)
+      } catch (err) {
+        console.error('⚠️ Falha no backup Supabase (não crítico):', err.message)
+      }
+    })
   }
 
   // Pairing Code via ENV
