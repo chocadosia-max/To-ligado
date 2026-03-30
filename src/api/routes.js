@@ -46,21 +46,19 @@ router.get('/health', (req, res) => {
 
 router.get('/qr', (req, res) => {
   if (latestQR) {
-    QRCode.toDataURL(latestQR, (err, url) => {
-      if (err) return res.status(500).send('Erro ao gerar imagem do QR Code')
-      res.send(`<body style="background:#111;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-        <h1 style="color:#00ff88;">TÔ LIGADO | CONEXÃO</h1>
-        <div style="background:white;padding:20px;border-radius:15px;box-shadow:0 0 30px rgba(0,255,136,0.2);">
-          <img src="${url}" style="width:300px;">
-        </div>
-        <p style="margin-top:20px;opacity:0.7;">Escaneie agora! O QR code expira rápido.</p>
-        <button onclick="window.location.reload()" style="background:#333;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">Atualizar QR</button>
-      </body>`)
-    })
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(latestQR)}`
+    res.send(`<body style="background:#111;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
+      <h1 style="color:#00ff88;">TÔ LIGADO | CONEXÃO</h1>
+      <div style="background:white;padding:20px;border-radius:15px;box-shadow:0 0 30px rgba(0,255,136,0.2);">
+        <img src="${qrUrl}" style="width:300px;" alt="QR Code">
+      </div>
+      <p style="margin-top:20px;opacity:0.7;">Escaneie agora! O QR code expira rápido.</p>
+      <button onclick="window.location.reload()" style="background:#333;color:white;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;">Atualizar QR</button>
+    </body>`)
   } else if (clienteWA) {
     res.send('<body style="background:#111;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h1>✅ WhatsApp Conectado!</h1><p>O bot já está pronto para o combate.</p></body>')
   } else {
-    res.send('<body style="background:#111;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h1>⏳ Gerando QR Code...</h1><p>Aguardando o servidor Baileys iniciar. Atualize em 5 segundos.</p></body>')
+    res.send('<body style="background:#111;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h1>⏳ Gerando QR Code...</h1><p>Aguardando o servidor Baileys iniciar. Atualize em 10 segundos.</p></body>')
   }
 })
 
