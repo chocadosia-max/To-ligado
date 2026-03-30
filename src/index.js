@@ -135,8 +135,11 @@ async function connectToWhatsApp() {
     // Backup no Supabase de forma assíncrona, sem bloquear o event loop
     setImmediate(async () => {
       try {
-        const creds = JSON.parse(fs.readFileSync(path.join(baseSessionPath, 'creds.json'), 'utf-8'))
-        await salvarSessaoNoBanco('main_session', creds)
+        const credsFile = path.join(baseSessionPath, 'creds.json')
+        if (fs.existsSync(credsFile)) {
+          const creds = JSON.parse(fs.readFileSync(credsFile, 'utf-8'))
+          await salvarSessaoNoBanco('main_session', creds)
+        }
       } catch (err) {
         console.error('⚠️ Falha no backup Supabase (não crítico):', err.message)
       }
@@ -167,8 +170,9 @@ async function connectToWhatsApp() {
       
       if (statusCode === 401 || statusCode === 405 || statusCode === DisconnectReason.loggedOut) {
         console.log('🚨 Sessão inválida. Limpando Geral...')
-        if (fs.existsSync(baseSessionPath)) fs.rmSync(baseSessionPath, { recursive: true, force: true })
-        // Opcional: deletar do banco também se quiser forçar novo QR
+        if (fs.existsSync(baseSessionPath)) {
+            try { fs.rmSync(baseSessionPath, { recursive: true, force: true }) } catch(e) {}
+        }
         setTimeout(connectToWhatsApp, 5000)
       } else {
         setTimeout(connectToWhatsApp, 5000)
@@ -182,8 +186,13 @@ async function connectToWhatsApp() {
       iniciarCrons()
       
       // Backup final da sessão conectada no banco
-      const creds = JSON.parse(fs.readFileSync(path.join(baseSessionPath, 'creds.json'), 'utf-8'))
-      await salvarSessaoNoBanco('main_session', creds)
+      const credsFile = path.join(baseSessionPath, 'creds.json')
+      if (fs.existsSync(credsFile)) {
+        try {
+          const creds = JSON.parse(fs.readFileSync(credsFile, 'utf-8'))
+          await salvarSessaoNoBanco('main_session', creds)
+        } catch (e) {}
+      }
     }
   })
 
