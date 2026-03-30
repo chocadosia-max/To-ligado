@@ -152,3 +152,12 @@ export async function carregarSessaoDoBanco(sessionId) {
   if (error) return null
   return data?.data ?? null
 }
+
+export async function deletarSessaoNoBanco(sessionId) {
+  if (!supabase) return
+  const { error } = await supabase
+    .from('sessions')
+    .delete()
+    .eq('id', sessionId)
+  if (error) console.error('⚠️ Erro ao deletar sessão no Supabase:', error.message)
+}

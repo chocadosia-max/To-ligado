@@ -7,6 +7,7 @@ import {
   getUserByPhone,
   atualizarStatus,
   adicionarPontos,
+  deletarSessaoNoBanco,
 } from '../services/db.js'
 import { MISSION_STATUS } from '../config/constants.js'
 
@@ -105,9 +106,11 @@ router.get('/logs', (req, res) => {
   </body>`)
 })
 
-router.get('/reset', (req, res) => {
-  res.send('<body style="background:#111;color:white;padding:20px;font-family:sans-serif;"><h1>🧹 Realizando Reset de Fábrica...</h1><p>O servidor vai reiniciar limpando a sessão. Aguarde 15s e abra os /logs.</p><script>setTimeout(() => window.location.href="/api/logs", 5000)</script></body>')
-  process.exit(1) // O Railway reinicia o processo automaticamente
+router.get('/reset', async (req, res) => {
+  adicionarLogManual('🧹 [RESET] Limpando sessões e reiniciando...')
+  await deletarSessaoNoBanco('main_session') // Apaga o backup do banco
+  res.send('<body style="background:#111;color:white;padding:20px;font-family:sans-serif;"><h1>🧹 Realizando Reset Atômico...</h1><p>A sessão antiga foi apagada do Supabase. O servidor vai reiniciar em 15s. Aguarde 15s e abra os /logs.</p><script>setTimeout(() => window.location.href="/api/logs", 5000)</script></body>')
+  process.exit(1)
 })
 
 // ── Adicionar missão manualmente ───────────────────────────
