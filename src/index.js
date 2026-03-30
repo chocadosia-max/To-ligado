@@ -109,8 +109,6 @@ const client = new Client({
 })
 
 // ── Eventos WhatsApp ───────────────────────────────────────
-let isAuthenticating = false
-
 client.on('qr', async (qr) => {
   latestQR = qr 
   
