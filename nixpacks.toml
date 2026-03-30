@@ -1,8 +1,5 @@
-[phases.setup]
-nixPkgs = ["chromium"]
-
 [phases.install]
 cmds = ["npm install"]
 
 [start]
-cmd = "node src/index.js"
+cmd = "node --max-old-space-size=400 src/index.js"
