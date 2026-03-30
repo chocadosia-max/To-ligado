@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Tô Ligado | O Corretor</title>
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#020202" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    
+    <!-- Google Fonts: Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <!-- O HUD será injetado pelo main.js -->
+      <div class="hud-container">
+        <header>
+          <div class="logo">TÔ LIGADO<span>.AI</span></div>
+          <div class="status-badge">
+            <span class="dot"></span> ONLINE
+          </div>
+        </header>
+
+        <main>
+          <section class="stats-grid">
+            <div class="stat-card glass" id="score-card">
+              <label>PONTUAÇÃO</label>
+              <div class="value">000</div>
+              <div class="sub">Pts acumulados</div>
+            </div>
+            <div class="stat-card glass" id="efficiency-card">
+              <label>EFICIÊNCIA</label>
+              <div class="value">0%</div>
+              <div class="sub">Taxa de sucesso</div>
+            </div>
+          </section>
+
+          <section class="missions-section">
+            <div class="section-header">
+              <h2>MISSÕES DO DIA</h2>
+              <button id="add-mission-btn" class="btn-icon">+</button>
+            </div>
+            <div id="missions-container" class="missions-list">
+              <!-- Missões injetadas aqui -->
+              <div class="loading-state">Acessando sistema central...</div>
+            </div>
+          </section>
+        </main>
+
+        <nav class="bottom-nav glass">
+          <button class="nav-item active" data-view="today">HOJE</button>
+          <button class="nav-item" data-view="stats">STATS</button>
+          <button class="nav-item" data-view="settings">AJUSTES</button>
+        </nav>
+      </div>
+    </div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>

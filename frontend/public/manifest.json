@@ -1,0 +1,23 @@
+{
+  "short_name": "Tô Ligado",
+  "name": "Tô Ligado | O Corretor de Elite",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#020202",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#020202",
+  "description": "Dashboard de missões do seu Corretor Sarcástico.",
+  "orientation": "portrait"
+}
