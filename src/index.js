@@ -102,7 +102,6 @@ async function connectToWhatsApp() {
   const sock = makeWASocket({
     version,
     logger: pino({ level: 'silent' }), // Log silencioso para não poluir o Railway
-    printQRInTerminal: true,
     auth: {
       creds: state.creds,
       keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'silent' })),
